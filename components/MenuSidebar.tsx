@@ -1,33 +1,33 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import Image from "next/image";
-import bgImage from "@/public/bgImage.jpg"; // Adjust the path as necessary
-
-interface MenuItem {
-  id: string;
-  label: string;
-}
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useCurrentLanguage } from "@/hooks/getCurrentLanguage";
+import UsefulLinks from "./UsefulLinks";
 
 interface MenuSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  menuItems: MenuItem[];
+
   onMenuItemClick?: (itemId: string) => void;
 }
 
 export default function MenuSidebar({
   isOpen,
   onClose,
-  menuItems,
+
   onMenuItemClick,
 }: MenuSidebarProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const currentLocale = useCurrentLanguage();
+  // const { dict } = useDictionary(currentLocale as Locale);
 
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
-      // Задержка для запуска анимации после рендера
       setTimeout(() => setIsAnimating(true), 10);
     } else {
       setIsAnimating(false);
@@ -44,8 +44,6 @@ export default function MenuSidebar({
 
   const handleMenuItemClick = (itemId: string) => {
     onMenuItemClick?.(itemId);
-    // Опционально можно закрыть меню после клика
-    // onClose();
   };
 
   if (!isVisible) return null;
@@ -62,7 +60,7 @@ export default function MenuSidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full bg-gray-900 w-64 shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed top-0 right-0 flex flex-col justify-between h-full bg-gray-900 w-64 shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
           isAnimating ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -86,20 +84,10 @@ export default function MenuSidebar({
             </button>
           </div>
 
-          <nav className="mt-12">
-            <ul className="space-y-4">
-              {menuItems.map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => handleMenuItemClick(item.id)}
-                    className="block w-full text-left text-white hover:text-gray-300 hover:bg-gray-700 px-3 py-2 rounded-lg transition-colors"
-                  >
-                    {item.label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <UsefulLinks handleMenuItemClick={handleMenuItemClick} />
+        </div>
+        <div className="p-4 border-t border-gray-700">
+          <LanguageSwitcher currentLocale={currentLocale} />
         </div>
       </div>
     </>

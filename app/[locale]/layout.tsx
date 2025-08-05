@@ -2,11 +2,9 @@ import { Inter } from "next/font/google";
 import { locales } from "@/i18n/config";
 import { Metadata } from "next";
 import Script from "next/script";
-// import Header from "@/components/Header";
-// import ClientHeaderWrapper from "@/components/ClientHeaderWrapper";
-// import Footer from "@/components/Footer";
 import "../globals.css";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
+// import { ItemContext } from "@/context/itemsContext";
 
 export async function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
@@ -32,9 +30,7 @@ export default async function RootLayout({
         <Script src="https://telegram.org/js/telegram-web-app.js" />
       </header>
       <body className={inter.className}>
-        {/* <ClientHeaderWrapper /> */}
         <main>{children}</main>
-        {/* <Footer /> */}
       </body>
     </html>
   );

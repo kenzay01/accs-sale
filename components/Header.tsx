@@ -6,7 +6,7 @@ import { useCurrentLanguage } from "@/hooks/getCurrentLanguage";
 import { useDictionary } from "@/hooks/getDictionary";
 import { Locale } from "@/i18n/config";
 import { useState } from "react";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Rocket } from "lucide-react";
 
 export default function Header() {
   const currentLanguage = useCurrentLanguage() as Locale;
@@ -27,8 +27,14 @@ export default function Header() {
           <h1 className="text-sm">Normalno Auto</h1>
         </div>
         <div>
-          <Link href="/" className="text-sm">
-            {dict?.header.write_us || "Contact Us"}
+          <Link
+            href="/"
+            className="text-sm py-2 px-4 rounded-full bg-gray-900 transition-colors cursor-pointer hover:bg-gray-800 text-white flex items-center"
+          >
+            <Rocket className="inline mr-1.5 w-5 h-auto" />
+            <label className="cursor-pointer">
+              {dict?.header.write_us || "Contact Us"}
+            </label>
           </Link>
         </div>
       </div>

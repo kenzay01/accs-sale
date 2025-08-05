@@ -1,0 +1,63 @@
+{
+  "header": {
+    "write_us": "Contact Us",
+    "rules_of_work": "Work Rules",
+    "rules_of_work_description": [
+      {
+        "title": "What is included in the cost of an account?",
+        "content": "After purchasing an account, you only receive a login and password, all other data is stored only with us."
+      },
+      {
+        "title": "How can I make a deposit?",
+        "content": "We handle the deposit, all you need to do is send us USDT and we will top up your account with the amount you sent."
+      },
+      {
+        "title": "How can I make a withdrawal?",
+        "content": "Write us the name of the bookmaker + login, we will make a withdrawal and send it to you in USDT."
+      },
+      {
+        "title": "What is the cost of the deposit?",
+        "content": "We make a deposit for free."
+      },
+      {
+        "title": "What to do in case of additional verification?",
+        "content": "We pass any type of verification and withdraw funds."
+      },
+      {
+        "title": "Is it safe to work on our accounts?",
+        "content": "Of course, all accounts are made exclusively on our SIM cards and emails. We are constantly in touch with the account owners."
+      },
+      {
+        "title": "What if the money on the account is stolen?",
+        "content": "We will immediately return your deposit and create a new account. Then we will deal with the theft issue and try to return your winnings to you as soon as possible. But if the one who stole this money refuses to return it, we will negotiate with you individually."
+      },
+      {
+        "title": "New suppliers",
+        "content": "When working with new suppliers, our service provides a full guarantee for your deposit + the amount paid for the bookmaker. In case of a scam on the part of the supplier, the deposit amount will be returned to you, provided that it was not withdrawn. Your account will also be replaced with any other from our range."
+      },
+      {
+        "title": "Bookmaker Scam",
+        "content": "We are not responsible for your funds if the bookmaker does not want to give them back, provided that our team has fulfilled all the requirements of this bookmaker."
+      }
+    ]
+  },
+  "home": {
+    "search_placeholder": "I'm looking for...",
+    "filter_title": "Sort by",
+    "filter_options": [
+      { "id": "rates", "label": "By rating" },
+      { "id": "novinki", "label": "New items" },
+      { "id": "vozvrastanie", "label": "By price ascending" },
+      { "id": "ubivanie", "label": "By price descending" }
+    ],
+    "menu_items": [
+      { "id": "ponesnie", "label": "Featured links" },
+      { "id": "onas", "label": "About us" },
+      { "id": "chasto", "label": "Frequently asked questions" },
+      { "id": "vip", "label": "VIP" },
+      { "id": "akcii", "label": "Promotions" }
+    ],
+    "close_button": "Close",
+    "active_filter": "Active filter"
+  }
+}

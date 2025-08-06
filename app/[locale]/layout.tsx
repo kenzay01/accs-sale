@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import Script from "next/script";
 import "../globals.css";
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
+import { ItemProvider } from "@/context/itemsContext";
 // import { ItemContext } from "@/context/itemsContext";
 
 export async function generateStaticParams() {
@@ -30,7 +31,9 @@ export default async function RootLayout({
         <Script src="https://telegram.org/js/telegram-web-app.js" />
       </header>
       <body className={inter.className}>
-        <main>{children}</main>
+        <ItemProvider>
+          <main>{children}</main>
+        </ItemProvider>
       </body>
     </html>
   );

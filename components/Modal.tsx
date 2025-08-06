@@ -29,6 +29,23 @@ export default function Modal({ isOpen, onClose, selectedItemId }: ModalProps) {
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   if (!isVisible) return null;
 
@@ -65,7 +82,7 @@ export default function Modal({ isOpen, onClose, selectedItemId }: ModalProps) {
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-50 transition-all duration-300 ${
+        className={`fixed inset-0 z-[70] transition-all duration-300 ${
           isAnimating ? "bg-black/50" : "bg-black/0"
         }`}
         onClick={onClose}
@@ -73,13 +90,13 @@ export default function Modal({ isOpen, onClose, selectedItemId }: ModalProps) {
 
       {/* Modal */}
       <div
-        className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-gray-800 p-6 rounded-lg shadow-lg z-50 w-11/12 max-w-md transition-all duration-300 ${
+        className={`fixed top-1/2 left-1/2 transform z-[70] -translate-x-1/2 -translate-y-1/2 bg-gray-950 border-2 border-red-500 p-6 rounded-lg shadow-lg w-11/12 max-w-md transition-all duration-300 ${
           isAnimating ? "opacity-100 scale-100" : "opacity-0 scale-95"
         }`}
       >
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">{title}</h2>
-          <button onClick={onClose} className="text-white hover:text-gray-300">
+          <button onClick={onClose} className="text-white hover:text-red-500">
             <X className="w-6 h-6" />
           </button>
         </div>

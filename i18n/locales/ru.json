@@ -39,11 +39,19 @@
         "title": "Скам БК",
         "content": "Мы не несем ответственность за ваши средства, если их не захочет отдавать букмекер, при условии что наша команда выполнила все требования данного букмекера."
       }
-    ]
+    ],
+    "payment": "Оплата",
+    "usdt": "USDT",
+    "your_name": "Ваше имя*",
+    "telegram_username": "Ваш username telegram*",
+    "agree_rules": "Я согласен с правилами работы сервиса"
   },
   "home": {
     "search_placeholder": "Я ищу...",
     "filter_title": "Сортировать по",
+    "no_categories": "Нет доступных категорий",
+    "no_subcategories": "Нет доступных подкатегорий",
+    "no_items": "Нет доступных товаров",
     "filter_options": [
       { "id": "rates", "label": "По рейтингу" },
       { "id": "novinki", "label": "Новинки" },
@@ -111,5 +119,25 @@
   },
   "cart_btn": {
     "cart": "Корзина"
+  },
+  "main": "Головная",
+  "shopping_cart": {
+    "title": "Корзина",
+    "continue_shopping": "Продолжить покупки",
+    "empty": "Корзина пуста",
+    "empty_subtitle": "Добавьте товары для оформления заказа",
+    "items_in_cart": "В корзине",
+    "item": "товар",
+    "items": "товара",
+    "items_many": "товаров",
+    "total": "Итого",
+    "checkout": "К оформлению",
+    "back_to_cart": "Назад в корзину",
+    "place_order": "Оформить заказ"
+  },
+  "modal_item": {
+    "description": "Описание",
+    "date_added": "Дата добавления",
+    "total": "Итого"
   }
 }

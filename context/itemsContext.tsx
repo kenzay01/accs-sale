@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import type { CartItem, Category, Subcategory } from "@/types/categories";
 import type { MainItemProps } from "@/types/mainItem";
 
@@ -11,204 +17,392 @@ interface ItemContextType {
   setSubcategories: (subcategories: { [key: string]: Subcategory[] }) => void;
   items: MainItemProps[];
   setItems: (items: MainItemProps[]) => void;
-  addCategory: (category: Category) => void;
-  deleteCategory: (id: string) => void;
-  editCategory: (id: string, updatedCategory: Category) => void;
-  addSubcategory: (categoryId: string, subcategory: Subcategory) => void;
-  deleteSubcategory: (categoryId: string, subcategoryId: string) => void;
+  addCategory: (formData: FormData) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+  editCategory: (id: string, formData: FormData) => Promise<void>;
+  addSubcategory: (categoryId: string, formData: FormData) => Promise<void>;
+  deleteSubcategory: (
+    categoryId: string,
+    subcategoryId: string
+  ) => Promise<void>;
   editSubcategory: (
     categoryId: string,
     subcategoryId: string,
-    updatedSubcategory: Subcategory
-  ) => void;
-  addItem: (item: MainItemProps) => void;
-  deleteItem: (id: string) => void;
-  editItem: (id: string, updatedItem: MainItemProps) => void;
+    formData: FormData
+  ) => Promise<void>;
+  addItem: (formData: FormData) => Promise<void>;
+  deleteItem: (id: string) => Promise<void>;
+  editItem: (id: string, formData: FormData) => Promise<void>;
   cartItems: CartItem[];
   setCartItems: (items: CartItem[]) => void;
   addCartItem: (item: CartItem) => void;
   removeCartItem: (id: string) => void;
+  loading: boolean;
+  error: string | null;
 }
 
 const ItemContext = createContext<ItemContextType | undefined>(undefined);
 
 export function ItemProvider({ children }: { children: ReactNode }) {
-  const [categories, setCategories] = useState<Category[]>([
-    {
-      id: "cat1",
-      label_ru: "Категория 1",
-      label_en: "Category 1",
-      img: "/cat1.jpg",
-    },
-    {
-      id: "cat2",
-      label_ru: "Категория 2",
-      label_en: "Category 2",
-      img: "/cat2.jpg",
-    },
-  ]);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [subcategories, setSubcategories] = useState<{
     [key: string]: Subcategory[];
-  }>({
-    cat1: [
-      {
-        id: "sub1",
-        label_ru: "Подкатегория 1.1",
-        label_en: "Subcategory 1.1",
-        img: "/sub1.jpg",
-      },
-      {
-        id: "sub2",
-        label_ru: "Подкатегория 1.2",
-        label_en: "Subcategory 1.2",
-        img: "/sub2.jpg",
-      },
-      {
-        id: "sub3",
-        label_ru: "Подкатегория 1.3",
-        label_en: "Subcategory 1.3",
-        img: "/sub3.jpg",
-      },
-      {
-        id: "sub4",
-        label_ru: "Подкатегория 1.4",
-        label_en: "Subcategory 1.4",
-        img: "/sub4.jpg",
-      },
-      {
-        id: "sub5",
-        label_ru: "Подкатегория 1.5",
-        label_en: "Subcategory 1.5",
-        img: "/sub5.jpg",
-      },
-    ],
-    cat2: [
-      {
-        id: "sub3",
-        label_ru: "Подкатегория 2.1",
-        label_en: "Subcategory 2.1",
-        img: "/sub3.jpg",
-      },
-      {
-        id: "sub4",
-        label_ru: "Подкатегория 2.2",
-        label_en: "Subcategory 2.2",
-        img: "/sub4.jpg",
-      },
-    ],
-  });
-  const [items, setItems] = useState<MainItemProps[]>([
-    {
-      id: "item1",
-      name: "talkSPORT BET",
-      price: 220,
-      img: "/item1.jpg",
-      categoryId: "cat1",
-      subcategoryId: "sub1",
-      timeAdded: "2023-01-01T00:00:00Z",
-    },
-    {
-      id: "item2",
-      name: "sky bet",
-      price: 200,
-      img: "/item2.jpg",
-      categoryId: "cat1",
-      subcategoryId: "sub2",
-      timeAdded: "2023-01-02T00:00:00Z",
-    },
-    {
-      id: "item3",
-      name: "test",
-      price: 500,
-      img: "/item3.jpg",
-      categoryId: "cat2",
-      subcategoryId: "sub2",
-      timeAdded: "2023-01-03T00:00:00Z",
-    },
-  ]);
+  }>({});
+  const [items, setItems] = useState<MainItemProps[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  // Load cartItems from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedCart = localStorage.getItem("cartItems");
+      try {
+        console.log("Loaded from localStorage:", savedCart);
+        if (savedCart) {
+          setCartItems(JSON.parse(savedCart));
+        }
+      } catch (e) {
+        console.error("Error parsing cartItems from localStorage:", e);
+        setCartItems([]);
+      }
+    }
+  }, []);
+
+  // Save cartItems to localStorage whenever they change
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      console.log("Saving to localStorage:", cartItems);
+      localStorage.setItem("cartItems", JSON.stringify(cartItems));
+    }
+  }, [cartItems]);
+
+  // Fetch categories, subcategories, and items
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const categoriesRes = await fetch("/api/categories");
+        if (!categoriesRes.ok) {
+          const errorData = await categoriesRes.json();
+          throw new Error(errorData.error || "Failed to fetch categories");
+        }
+        const categoriesData = await categoriesRes.json();
+        setCategories(categoriesData);
+
+        const subcategoriesData: { [key: string]: Subcategory[] } = {};
+        for (const category of categoriesData) {
+          const subRes = await fetch(
+            `/api/subcategories?categoryId=${category.id}`
+          );
+          if (!subRes.ok) {
+            const errorData = await subRes.json();
+            throw new Error(
+              errorData.error ||
+                `Failed to fetch subcategories for category ${category.id}`
+            );
+          }
+          const subData = await subRes.json();
+          subcategoriesData[category.id] = subData.map((sub: any) => ({
+            id: sub.id,
+            categoryId: sub.category_id,
+            label_ru: sub.label_ru,
+            label_en: sub.label_en,
+            img: sub.img,
+          }));
+        }
+        setSubcategories(subcategoriesData);
+
+        const itemsRes = await fetch("/api/items");
+        if (!itemsRes.ok) {
+          const errorData = await itemsRes.json();
+          throw new Error(errorData.error || "Failed to fetch items");
+        }
+        const itemsData = await itemsRes.json();
+        setItems(
+          itemsData.map((item: any) => ({
+            id: item.id,
+            categoryId: item.category_id,
+            subcategoryId: item.subcategory_id,
+            name: item.name,
+            price: parseFloat(item.price) || 0,
+            description_ru: item.description_ru || "",
+            description_en: item.description_en || "",
+            img: item.img,
+            timeAdded: item.time_added || new Date().toISOString(),
+          }))
+        );
+      } catch (error: any) {
+        setError(error.message || "Failed to load data");
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const addCartItem = (item: CartItem) => {
     setCartItems((prev) => {
       const existingItem = prev.find((i) => i.id === item.id);
-      if (existingItem) {
-        return prev.map((i) =>
-          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-        );
-      }
-      return [...prev, { ...item, quantity: item.quantity || 1 }];
+      return existingItem
+        ? prev.map((i) =>
+            i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+          )
+        : [...prev, { ...item, quantity: item.quantity || 1 }];
     });
   };
+
   const removeCartItem = (id: string) => {
     setCartItems((prev) => {
       const existingItem = prev.find((i) => i.id === id);
-      if (existingItem && existingItem.quantity > 1) {
-        return prev.map((i) =>
-          i.id === id ? { ...i, quantity: i.quantity - 1 } : i
-        );
+      return existingItem && existingItem.quantity > 1
+        ? prev.map((i) =>
+            i.id === id ? { ...i, quantity: i.quantity - 1 } : i
+          )
+        : prev.filter((i) => i.id !== id);
+    });
+  };
+
+  const addCategory = async (formData: FormData) => {
+    try {
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add category");
       }
-      return prev.filter((i) => i.id !== id);
-    });
+      const newCategory = await response.json();
+      setCategories((prev) => [...prev, newCategory]);
+    } catch (error: any) {
+      console.error("Failed to add category:", error);
+      throw error;
+    }
   };
 
-  const addCategory = (category: Category) => {
-    setCategories((prev) => [...prev, category]);
+  const deleteCategory = async (id: string) => {
+    try {
+      const response = await fetch(`/api/categories`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete category");
+      }
+      setCategories((prev) => prev.filter((cat) => cat.id !== id));
+      setSubcategories((prev) => {
+        const newSubcats = { ...prev };
+        delete newSubcats[id];
+        return newSubcats;
+      });
+      setItems((prev) => prev.filter((item) => item.categoryId !== id));
+    } catch (error: any) {
+      console.error("Failed to delete category:", error);
+      throw error;
+    }
   };
 
-  const deleteCategory = (id: string) => {
-    setCategories((prev) => prev.filter((cat) => cat.id !== id));
-    setSubcategories((prev) => {
-      const newSubcats = { ...prev };
-      delete newSubcats[id];
-      return newSubcats;
-    });
+  const editCategory = async (id: string, formData: FormData) => {
+    try {
+      const response = await fetch(`/api/categories`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to edit category");
+      }
+      const updatedCategory = await response.json();
+      setCategories((prev) =>
+        prev.map((cat) => (cat.id === id ? updatedCategory : cat))
+      );
+    } catch (error: any) {
+      console.error("Failed to edit category:", error);
+      throw error;
+    }
   };
 
-  const editCategory = (id: string, updatedCategory: Category) => {
-    setCategories((prev) =>
-      prev.map((cat) => (cat.id === id ? updatedCategory : cat))
-    );
+  const addSubcategory = async (categoryId: string, formData: FormData) => {
+    try {
+      const response = await fetch("/api/subcategories", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add subcategory");
+      }
+      const newSubcategory = await response.json();
+      setSubcategories((prev) => ({
+        ...prev,
+        [categoryId]: [
+          ...(prev[categoryId] || []),
+          {
+            id: newSubcategory.id,
+            categoryId: newSubcategory.category_id,
+            label_ru: newSubcategory.label_ru,
+            label_en: newSubcategory.label_en,
+            img: newSubcategory.img, // Expecting /api/images/filename.jpg
+          },
+        ],
+      }));
+    } catch (error: any) {
+      console.error("Failed to add subcategory:", error);
+      throw error;
+    }
   };
 
-  const addSubcategory = (categoryId: string, subcategory: Subcategory) => {
-    setSubcategories((prev) => ({
-      ...prev,
-      [categoryId]: [...(prev[categoryId] || []), subcategory],
-    }));
+  const deleteSubcategory = async (
+    categoryId: string,
+    subcategoryId: string
+  ) => {
+    try {
+      const response = await fetch(`/api/subcategories`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: subcategoryId }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete subcategory");
+      }
+      setSubcategories((prev) => ({
+        ...prev,
+        [categoryId]: prev[categoryId].filter(
+          (sub) => sub.id !== subcategoryId
+        ),
+      }));
+      setItems((prev) =>
+        prev.filter((item) => item.subcategoryId !== subcategoryId)
+      );
+    } catch (error: any) {
+      console.error("Failed to delete subcategory:", error);
+      throw error;
+    }
   };
 
-  const deleteSubcategory = (categoryId: string, subcategoryId: string) => {
-    setSubcategories((prev) => ({
-      ...prev,
-      [categoryId]: prev[categoryId].filter((sub) => sub.id !== subcategoryId),
-    }));
-  };
-
-  const editSubcategory = (
+  const editSubcategory = async (
     categoryId: string,
     subcategoryId: string,
-    updatedSubcategory: Subcategory
+    formData: FormData
   ) => {
-    setSubcategories((prev) => ({
-      ...prev,
-      [categoryId]: prev[categoryId].map((sub) =>
-        sub.id === subcategoryId ? updatedSubcategory : sub
-      ),
-    }));
+    try {
+      const response = await fetch(`/api/subcategories`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to edit subcategory");
+      }
+      const updatedSubcategory = await response.json();
+      setSubcategories((prev) => ({
+        ...prev,
+        [categoryId]: prev[categoryId].map((sub) =>
+          sub.id === subcategoryId
+            ? {
+                id: updatedSubcategory.id,
+                categoryId: updatedSubcategory.category_id,
+                label_ru: updatedSubcategory.label_ru,
+                label_en: updatedSubcategory.label_en,
+                img: updatedSubcategory.img, // Expecting /api/images/filename.jpg
+              }
+            : sub
+        ),
+      }));
+    } catch (error: any) {
+      console.error("Failed to edit subcategory:", error);
+      throw error;
+    }
   };
 
-  const addItem = (item: MainItemProps) => {
-    setItems((prev) => [...prev, item]);
+  const addItem = async (formData: FormData) => {
+    try {
+      const response = await fetch("/api/items", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add item");
+      }
+      const newItem = await response.json();
+      setItems((prev) => [
+        ...prev,
+        {
+          id: newItem.id,
+          categoryId: newItem.category_id,
+          subcategoryId: newItem.subcategory_id,
+          name: newItem.name,
+          price: parseFloat(newItem.price) || 0,
+          description_ru: newItem.description_ru || "",
+          description_en: newItem.description_en || "",
+          img: newItem.img, // Expecting /api/images/filename.jpg
+          timeAdded: newItem.time_added || new Date().toISOString(),
+        },
+      ]);
+    } catch (error: any) {
+      console.error("Failed to add item:", error);
+      throw error;
+    }
   };
 
-  const deleteItem = (id: string) => {
-    setItems((prev) => prev.filter((item) => item.id !== id));
+  const deleteItem = async (id: string) => {
+    try {
+      const response = await fetch(`/api/items`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete item");
+      }
+      setItems((prev) => prev.filter((item) => item.id !== id));
+    } catch (error: any) {
+      console.error("Failed to delete item:", error);
+      throw error;
+    }
   };
 
-  const editItem = (id: string, updatedItem: MainItemProps) => {
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? updatedItem : item))
-    );
+  const editItem = async (id: string, formData: FormData) => {
+    try {
+      const response = await fetch(`/api/items`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to edit item");
+      }
+      const updatedItem = await response.json();
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? {
+                id: updatedItem.id,
+                categoryId: updatedItem.category_id,
+                subcategoryId: updatedItem.subcategory_id,
+                name: updatedItem.name,
+                price: parseFloat(updatedItem.price) || 0,
+                description_ru: updatedItem.description_ru || "",
+                description_en: updatedItem.description_en || "",
+                img: updatedItem.img, // Expecting /api/images/filename.jpg
+                timeAdded: updatedItem.time_added || item.timeAdded,
+              }
+            : item
+        )
+      );
+    } catch (error: any) {
+      console.error("Failed to edit item:", error);
+      throw error;
+    }
   };
 
   return (
@@ -233,6 +427,8 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         setCartItems,
         addCartItem,
         removeCartItem,
+        loading,
+        error,
       }}
     >
       {children}

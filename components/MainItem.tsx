@@ -7,20 +7,30 @@ import { useCurrentLanguage } from "@/hooks/getCurrentLanguage";
 import { useDictionary } from "@/hooks/getDictionary";
 import { Locale } from "@/i18n/config";
 import { Plus, Minus } from "lucide-react";
+import Image from "next/image";
+import ModalItem from "./ModalItem";
+
+interface ExtendedMainItemProps extends MainItemProps {
+  handleMenuItemClick: (itemId: string) => void;
+}
 
 export default function MainItem({
   id,
   name,
   price,
   img,
+  description_ru,
+  description_en,
   categoryId,
   subcategoryId,
   timeAdded,
-}: MainItemProps) {
+  handleMenuItemClick,
+}: ExtendedMainItemProps) {
   const currentLanguage = useCurrentLanguage();
   const { dict } = useDictionary(currentLanguage as Locale);
   const { addCartItem, removeCartItem, cartItems } = useItemContext();
   const { categories, subcategories } = useItemContext();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Sync inCart and quantity with cart context
   const cartItem = useMemo(
@@ -56,8 +66,7 @@ export default function MainItem({
   }, [currentSubcategory, currentLanguage]);
 
   const handleItemClick = () => {
-    console.log("Item clicked:", id);
-    // Add logic here for item click (e.g., show details)
+    setIsModalOpen(true);
   };
 
   const handleCartAction = () => {
@@ -78,16 +87,7 @@ export default function MainItem({
       setInCart(false);
     } else {
       const newQuantity = quantity - 1;
-      addCartItem({
-        id,
-        name,
-        price,
-        img,
-        categoryId,
-        subcategoryId,
-        timeAdded,
-        quantity: newQuantity,
-      });
+      removeCartItem(id);
       setQuantity(newQuantity);
     }
   };
@@ -108,54 +108,67 @@ export default function MainItem({
   };
 
   return (
-    <div
-      className="flex flex-col items-center bg-gray-900 rounded-xl p-4 min-w-38 w-40 shadow-xl hover:shadow-2xl transition-shadow"
-      onClick={handleItemClick}
-    >
-      <div className="w-24 h-24 bg-gray-800 rounded-lg mb-2 flex items-center justify-center">
-        <span className="text-white font-bold">{img}</span>
-      </div>
-      <div className="text-sm text-gray-400 mb-1">{name}</div>
-      <div className="text-lg font-semibold mb-1">${price}</div>
-      <div className="text-sm text-gray-400 mb-1 rounded-xl shadow-2xl">
-        {currentCategoryLabel}
-      </div>
-      <div className="text-sm text-gray-400 mb-4 rounded-xl shadow-2xl">
-        {currentSubcategoryLabel}
-      </div>
-      {inCart ? (
-        <div className="w-full h-10 bg-purple-700 text-white py-2 rounded-lg hover:bg-purple-600 transition-colors flex items-center justify-evenly">
+    <>
+      <div
+        className="flex flex-col items-center bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 hover:border-red-500 transition-all duration-300 rounded-xl p-4 min-w-38 w-40 shadow-xl hover:shadow-2xl cursor-pointer"
+        onClick={handleItemClick}
+      >
+        <Image
+          src={img}
+          alt={name}
+          width={96}
+          height={96}
+          className="rounded-lg mb-2 w-24 h-24 object-contain"
+        />
+        <div className="text-sm text-gray-400 mb-1">{name}</div>
+        <div className="text-lg font-semibold mb-1">${price}</div>
+        <div className="text-sm text-gray-400 mb-1 rounded-xl shadow-2xl">
+          {currentCategoryLabel}
+        </div>
+        <div className="text-sm text-gray-400 mb-4 rounded-xl shadow-2xl">
+          {currentSubcategoryLabel}
+        </div>
+        {inCart ? (
+          <div className="w-full h-10 bg-gradient-to-r from-red-500 to-red-700 text-white py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-evenly">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCartAction();
+              }}
+              className="text-2xl flex items-center justify-center"
+            >
+              <Minus className="w-6 h-6" />
+            </button>
+            <span className="text-white">{quantity}</span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleIncrease();
+              }}
+              className="flex items-center justify-center"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+          </div>
+        ) : (
           <button
             onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering item click
+              e.stopPropagation();
               handleCartAction();
             }}
-            className="text-2xl flex items-center justify-center"
+            className="w-full h-10 bg-gradient-to-r from-red-500 to-red-700 text-white py-2 rounded-lg hover:bg-red-600 transition-colors"
           >
-            <Minus className="w-6 h-6" />
+            {dict?.main_item.in_cart || "Add to Cart"}
           </button>
-          <span className="text-white">{quantity}</span>
-          <button
-            onClick={(e) => {
-              e.stopPropagation(); // Prevent triggering item click
-              handleIncrease();
-            }}
-            className="flex items-center justify-center"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-        </div>
-      ) : (
-        <button
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent triggering item click
-            handleCartAction();
-          }}
-          className="w-full h-10 bg-purple-700 text-white py-2 rounded-lg hover:bg-purple-600 transition-colors"
-        >
-          {dict?.main_item.in_cart || "Add to Cart"}
-        </button>
-      )}
-    </div>
+        )}
+      </div>
+
+      <ModalItem
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        itemId={id}
+        handleMenuItemClick={handleMenuItemClick}
+      />
+    </>
   );
 }

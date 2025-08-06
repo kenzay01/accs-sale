@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 interface CategoryItemProps {
   id: string;
   label: string;
@@ -18,8 +20,8 @@ export default function CategoryItem({
   return (
     <button
       onClick={() => onClick(id)}
-      className={`px-4 py-2 rounded-lg  hover:bg-gray-700 transition-all flex flex-col items-center w-32 min-w-32 h-auto shadow-[10px_10px_10px_rgba(0,0,0,1)] ${
-        active ? "bg-gray-800 -translate-y-2" : ""
+      className={`px-4 py-2 rounded-lg  bg-gray-950 border-2 border-gray-900  transition-all flex flex-col items-center w-32 min-w-32 h-auto shadow-[0px_10px_10px_rgba(255,0,0,0.5)] ${
+        active ? "bg-gray-900 -translate-y-2" : ""
       }`}
     >
       {/* <img
@@ -27,7 +29,15 @@ export default function CategoryItem({
         alt={imageAlt}
         className="w-12 h-12 mb-2 rounded-full"
       /> */}
-      <div className="w-16 h-16 mb-2 rounded-full bg-gray-300"></div>
+      <Image
+        src={imageSrc}
+        alt={imageAlt}
+        width={48}
+        height={48}
+        className="w-22 h-16 mb-2 rounded-lg object-cover"
+      />
+      {/* Placeholder for image if needed */}
+      {/* <div className="w-22 h-16 mb-2 rounded-lg bg-gray-300"></div> */}
       {label}
     </button>
   );

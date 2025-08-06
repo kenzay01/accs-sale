@@ -39,6 +39,23 @@ export default function FilterModal({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -54,13 +71,13 @@ export default function FilterModal({
 
   return (
     <div
-      className={`fixed inset-0 transition-all duration-300 flex items-start justify-center z-50 ${
+      className={`fixed inset-0 transition-all duration-300 flex items-start justify-center z-[70] ${
         isAnimating ? "bg-black/50" : "bg-black/0"
       }`}
       onClick={handleBackdropClick}
     >
       <div
-        className={`bg-gray-900 p-6 rounded-b-lg shadow-lg w-11/12 max-w-md transform transition-all duration-300 ease-out ${
+        className={`bg-gray-950 border-2 border-t-0 border-red-500 p-6 rounded-b-lg shadow-lg w-11/12 max-w-md transform transition-all duration-300 ease-out ${
           isAnimating
             ? "translate-y-0 opacity-100 scale-100"
             : "-translate-y-8 opacity-0 scale-95"
@@ -79,7 +96,7 @@ export default function FilterModal({
                 name="filter"
                 checked={selectedFilter === option.id}
                 onChange={() => handleFilterSelect(option.id)}
-                className="mr-3 text-purple-600 focus:ring-purple-500"
+                className="mr-3 text-red-600 focus:ring-red-500"
               />
               <label
                 htmlFor={option.id}

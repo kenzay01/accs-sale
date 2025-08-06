@@ -11,18 +11,10 @@ async function getDb(): Promise<DatabaseManager> {
   return dbInstance;
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const db = await getDb();
-    const { searchParams } = new URL(request.url);
-    const categoryId = searchParams.get("categoryId");
-    if (!categoryId) {
-      return NextResponse.json(
-        { error: "Category ID is required" },
-        { status: 400 }
-      );
-    }
-    const subcategories = await db.getSubcategories(categoryId);
+    const subcategories = await db.getSubcategories();
     return NextResponse.json(subcategories);
   } catch (error) {
     console.error("Error fetching subcategories:", error);
@@ -171,8 +163,6 @@ export async function DELETE(request: Request) {
     const baseUrl = new URL(request.url).origin;
 
     // Delete associated image
-    // Define the expected type for subcategory
-
     const subcategory = (await db.getSubcategoryById(id)) as Subcategory | null;
     if (subcategory?.img) {
       await fetch(

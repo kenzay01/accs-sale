@@ -59,12 +59,10 @@ class DatabaseManager {
 
       `CREATE TABLE IF NOT EXISTS subcategories (
         id TEXT PRIMARY KEY,
-        category_id TEXT,
         label_ru TEXT,
         label_en TEXT,
         img TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (category_id) REFERENCES categories(id)
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`,
 
       `CREATE TABLE IF NOT EXISTS items (
@@ -211,18 +209,16 @@ class DatabaseManager {
 
   // Subcategories
   async createSubcategory(sub) {
-    const { id, category_id, label_ru, label_en, img } = sub;
+    const { id, label_ru, label_en, img } = sub;
     return await this.run(
-      `INSERT INTO subcategories (id, category_id, label_ru, label_en, img)
-       VALUES (?, ?, ?, ?, ?)`,
-      [id, category_id, label_ru, label_en, img]
+      `INSERT INTO subcategories (id, label_ru, label_en, img)
+       VALUES (?, ?, ?, ?)`,
+      [id, label_ru, label_en, img]
     );
   }
 
-  async getSubcategories(categoryId) {
-    return await this.all("SELECT * FROM subcategories WHERE category_id = ?", [
-      categoryId,
-    ]);
+  async getSubcategories() {
+    return await this.all("SELECT * FROM subcategories");
   }
 
   async getSubcategoryById(id) {

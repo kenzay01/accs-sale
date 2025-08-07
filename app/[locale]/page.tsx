@@ -17,17 +17,10 @@ import CartButton from "@/components/CartButton";
 import type { Category, Subcategory } from "@/types/categories";
 import { useItemContext } from "@/context/itemsContext";
 import { v4 as uuidv4 } from "uuid";
-
-// Add global type declaration for window.Telegram
-declare global {
-  interface Window {
-    Telegram?: {
-      WebApp?: any;
-    };
-  }
-}
+import { useTelegram } from "@/context/TelegramProvider";
 
 function HomeContent() {
+  const { user } = useTelegram();
   const { categories, subcategories, items } = useItemContext();
   const currentLanguage = useCurrentLanguage() as Locale;
   const { dict } = useDictionary(currentLanguage);
@@ -123,11 +116,6 @@ function HomeContent() {
     setSelectedSubcategory(subcategoryId);
   };
 
-  let tg =
-    typeof window !== "undefined" && window.Telegram && window.Telegram.WebApp
-      ? window.Telegram.WebApp
-      : undefined;
-
   return (
     <div className="relative min-h-screen text-white">
       <CartButton />
@@ -161,7 +149,7 @@ function HomeContent() {
           />
         </div>
       </div>
-      <h1>{tg.initDataUnsafe.user.first_name}</h1>
+      <h1>Welcome, {user?.first_name}</h1>
       <CategorySelector
         onSelectionChange={handleSelectionChange}
         categories={categories}

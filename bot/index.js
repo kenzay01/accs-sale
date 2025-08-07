@@ -100,7 +100,13 @@ class AccsSaleBot {
 
     const keyboard = {
       keyboard: [
-        [{ text: t.open_catalog, web_app: { url: catalogUrl } }, t.my_orders],
+        [
+          {
+            text: t.open_catalog,
+            web_app: { url: catalogUrl },
+          },
+          t.my_orders,
+        ],
         [t.information, t.support],
       ],
       resize_keyboard: true,
@@ -169,7 +175,12 @@ class AccsSaleBot {
           this.showSupport(chatId, language);
           break;
         default:
-          bot.sendMessage(chatId, t.unknown_option);
+          // Якщо не розпізнали команду, можливо це WebApp дані
+          if (msg.web_app_data) {
+            this.handleWebAppData(msg);
+          } else {
+            bot.sendMessage(chatId, t.unknown_option);
+          }
       }
     } catch (error) {
       console.error("Error processing text message:", error);

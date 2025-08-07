@@ -34,15 +34,28 @@ function HomeContent() {
   );
   const { cartItems } = useItemContext();
 
+  const [isDebugMode, setIsDebugMode] = useState(false);
+
   useEffect(() => {
-    // Debug Telegram initialization
-    if (!webApp) {
-      console.warn("Telegram WebApp not initialized");
-    } else {
-      console.log("Telegram WebApp initialized:", webApp);
-      console.log("User data:", user);
+    // Увімкни debug режим якщо не в Telegram
+    if (!webApp && typeof window !== "undefined") {
+      setIsDebugMode(true);
+      console.log("Debug mode enabled - not running in Telegram");
     }
-  }, [webApp, user]);
+  }, [webApp]);
+
+  // Mock користувач для тестування поза Telegram
+  const mockUser = isDebugMode
+    ? {
+        id: 12345678,
+        first_name: "Test",
+        last_name: "User",
+        username: "testuser",
+        language_code: "ru",
+      }
+    : null;
+
+  const displayUser = user || mockUser;
 
   const filterOptions = dict?.home.filter_options || [
     { id: "rates", label: "By rates" },
@@ -147,10 +160,29 @@ function HomeContent() {
         </div>
       </div>
       <div className="p-4">
-        {user ? (
-          <h1>Welcome, {user.first_name}!</h1>
+        {isDebugMode && (
+          <div className="bg-yellow-900 border border-yellow-600 rounded p-3 mb-4">
+            <p className="text-yellow-200">
+              ⚠️ Debug Mode: Not running in Telegram
+            </p>
+          </div>
+        )}
+
+        {displayUser ? (
+          <div className="bg-gray-800 rounded p-4 mb-4">
+            <h1 className="text-xl mb-2">Welcome, {displayUser.first_name}!</h1>
+            <div className="text-sm text-gray-300">
+              <p>ID: {displayUser.id}</p>
+              {displayUser.username && <p>Username: @{displayUser.username}</p>}
+              {displayUser.language_code && (
+                <p>Language: {displayUser.language_code}</p>
+              )}
+            </div>
+          </div>
         ) : (
-          <p className="text-red-500">Please open this app in Telegram.</p>
+          <div className="bg-red-900 border border-red-600 rounded p-3 mb-4">
+            <p className="text-red-200">❌ Please open this app in Telegram.</p>
+          </div>
         )}
       </div>
       <CategorySelector

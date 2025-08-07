@@ -3,7 +3,6 @@
 import Header from "@/components/Header";
 import FilterModal from "@/components/FilterModal";
 import MenuSidebar from "@/components/MenuSidebar";
-import Modal from "@/components/Modal";
 import CategorySelector from "@/components/CategorySelector";
 import MainItem from "@/components/MainItem";
 import { useState, useEffect, useMemo } from "react";
@@ -14,13 +13,12 @@ import { Filter, Menu, Search } from "lucide-react";
 import Image from "next/image";
 import bgImage from "@/public/bgImage.jpg";
 import CartButton from "@/components/CartButton";
-import type { Category, Subcategory } from "@/types/categories";
 import { useItemContext } from "@/context/itemsContext";
 import { v4 as uuidv4 } from "uuid";
 import { useTelegram } from "@/context/TelegramProvider";
 
 function HomeContent() {
-  const { user } = useTelegram();
+  const { webApp, user } = useTelegram();
   const { categories, subcategories, items } = useItemContext();
   const currentLanguage = useCurrentLanguage() as Locale;
   const { dict } = useDictionary(currentLanguage);
@@ -36,6 +34,16 @@ function HomeContent() {
   );
   const { cartItems } = useItemContext();
 
+  useEffect(() => {
+    // Debug Telegram initialization
+    if (!webApp) {
+      console.warn("Telegram WebApp not initialized");
+    } else {
+      console.log("Telegram WebApp initialized:", webApp);
+      console.log("User data:", user);
+    }
+  }, [webApp, user]);
+
   const filterOptions = dict?.home.filter_options || [
     { id: "rates", label: "By rates" },
     { id: "novinki", label: "New items" },
@@ -43,32 +51,23 @@ function HomeContent() {
     { id: "ubivanie", label: "By price descending" },
   ];
 
-  // Фільтрація і сортування items
   const filteredAndSortedItems = useMemo(() => {
     let filteredItems = [...items];
-
-    // Фільтрація за пошуковим запитом
     if (searchQuery.trim()) {
       filteredItems = filteredItems.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Фільтрація за категорією
     if (selectedCategory) {
       filteredItems = filteredItems.filter(
         (item) => item.categoryId === selectedCategory
       );
     }
-
-    // Фільтрація за підкатегорією
     if (selectedSubcategory) {
       filteredItems = filteredItems.filter(
         (item) => item.subcategoryId === selectedSubcategory
       );
     }
-
-    // Сортування за обраним фільтром
     switch (selectedFilter) {
       case "novinki":
         filteredItems.sort(
@@ -86,7 +85,6 @@ function HomeContent() {
       default:
         break;
     }
-
     return filteredItems;
   }, [
     items,
@@ -99,7 +97,6 @@ function HomeContent() {
   const handleFilterSelect = (filterId: string) => {
     setSelectedFilter(filterId);
     setIsFilterOpen(false);
-    console.log("Selected filter:", filterId);
   };
 
   const handleMenuItemClick = (itemId: string) => {
@@ -149,7 +146,13 @@ function HomeContent() {
           />
         </div>
       </div>
-      <h1>Welcome, {user?.first_name}</h1>
+      <div className="p-4">
+        {user ? (
+          <h1>Welcome, {user.first_name}!</h1>
+        ) : (
+          <p className="text-red-500">Please open this app in Telegram.</p>
+        )}
+      </div>
       <CategorySelector
         onSelectionChange={handleSelectionChange}
         categories={categories}
@@ -176,7 +179,6 @@ function HomeContent() {
         onClose={() => setIsMenuOpen(false)}
         onMenuItemClick={handleMenuItemClick}
       />
-      {/* <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} /> */}
       <section className="p-4">
         {filteredAndSortedItems.length > 0 ? (
           <div className="flex gap-4 flex-wrap overflow-x-auto pb-2 items-center justify-center">

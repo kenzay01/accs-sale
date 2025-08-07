@@ -18,5 +18,12 @@ export interface IWebApp {
   close: () => void;
   disableVerticalSwipes: () => void;
   requestFullscreen: () => void;
-  // Add other methods as needed (e.g., showPopup, onEvent)
+  showPopup?: (
+    params: {
+      title?: string;
+      message: string;
+      buttons?: Array<{ type: string; text: string }>;
+    },
+    callback?: (id: string) => void
+  ) => void;
 }

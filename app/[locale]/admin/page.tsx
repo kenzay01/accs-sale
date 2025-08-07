@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useItemContext } from "@/context/itemsContext";
 import { MainItemProps } from "@/types/mainItem";
-import { Category, Subcategory } from "@/types/categories";
+import { Category, Subcategory, Page } from "@/types/categories";
 import { Upload, X, Image as ImageIcon } from "lucide-react";
 
 const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
@@ -10,6 +10,7 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
     categories,
     subcategories,
     items,
+    pages,
     addCategory,
     editCategory,
     deleteCategory,
@@ -19,6 +20,9 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
     addItem,
     editItem,
     deleteItem,
+    addPage,
+    editPage,
+    deletePage,
     loading,
     error,
   } = useItemContext();
@@ -46,11 +50,20 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
     subcategoryId: "",
     timeAdded: new Date().toISOString(),
   });
+  const [newPage, setNewPage] = useState<Page>({
+    id: "",
+    title_ru: "",
+    title_en: "",
+    content_ru: "",
+    content_en: "",
+    content_type: "text",
+  });
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [editingSubcategory, setEditingSubcategory] =
     useState<Subcategory | null>(null);
   const [editingItem, setEditingItem] = useState<MainItemProps | null>(null);
+  const [editingPage, setEditingPage] = useState<Page | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [categoryImage, setCategoryImage] = useState<File | null>(null);
   const [subcategoryImage, setSubcategoryImage] = useState<File | null>(null);
@@ -365,6 +378,107 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
     } catch (error) {
       setFormError("Failed to delete item");
       console.error("Error deleting item:", error);
+    }
+  };
+
+  const handleAddPage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    if (
+      !newPage.id ||
+      !newPage.title_ru ||
+      !newPage.title_en ||
+      !newPage.content_type ||
+      (newPage.content_type === "text" &&
+        (!newPage.content_ru || !newPage.content_en)) ||
+      (newPage.content_type === "faq" &&
+        (!newPage.content_ru || !newPage.content_en))
+    ) {
+      setFormError("Please fill all required fields");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("id", newPage.id);
+      formData.append("title_ru", newPage.title_ru);
+      formData.append("title_en", newPage.title_en);
+      formData.append(
+        "content_ru",
+        typeof newPage.content_ru === "string"
+          ? newPage.content_ru
+          : JSON.stringify(newPage.content_ru)
+      );
+      formData.append(
+        "content_en",
+        typeof newPage.content_en === "string"
+          ? newPage.content_en
+          : JSON.stringify(newPage.content_en)
+      );
+      formData.append("content_type", newPage.content_type);
+      await addPage(formData);
+      setNewPage({
+        id: "",
+        title_ru: "",
+        title_en: "",
+        content_ru: "",
+        content_en: "",
+        content_type: "text",
+      });
+    } catch (error) {
+      setFormError("Failed to add page");
+      console.error("Error adding page:", error);
+    }
+  };
+
+  const handleEditPage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    if (
+      !editingPage ||
+      !editingPage.title_ru ||
+      !editingPage.title_en ||
+      !editingPage.content_type ||
+      (editingPage.content_type === "text" &&
+        (!editingPage.content_ru || !editingPage.content_en)) ||
+      (editingPage.content_type === "faq" &&
+        (!editingPage.content_ru || !editingPage.content_en))
+    ) {
+      setFormError("Please fill all required fields");
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append("id", editingPage.id);
+      formData.append("title_ru", editingPage.title_ru);
+      formData.append("title_en", editingPage.title_en);
+      formData.append(
+        "content_ru",
+        typeof editingPage.content_ru === "string"
+          ? editingPage.content_ru
+          : JSON.stringify(editingPage.content_ru)
+      );
+      formData.append(
+        "content_en",
+        typeof editingPage.content_en === "string"
+          ? editingPage.content_en
+          : JSON.stringify(editingPage.content_en)
+      );
+      formData.append("content_type", editingPage.content_type);
+      await editPage(editingPage.id, formData);
+      setEditingPage(null);
+    } catch (error) {
+      setFormError("Failed to update page");
+      console.error("Error updating page:", error);
+    }
+  };
+
+  const handleDeletePage = async (id: string) => {
+    setFormError(null);
+    try {
+      await deletePage(id);
+    } catch (error) {
+      setFormError("Failed to delete page");
+      console.error("Error deleting page:", error);
     }
   };
 
@@ -762,7 +876,7 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
         </div>
 
         {/* Items Section */}
-        <div>
+        <div className="mb-8">
           <h2 className="text-xl font-semibold text-gray-100 mb-4">Items</h2>
           <form
             onSubmit={editingItem ? handleEditItem : handleAddItem}
@@ -997,6 +1111,213 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
             ))}
           </div>
         </div>
+
+        {/* Pages Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-semibold text-gray-100 mb-4">Pages</h2>
+          <form
+            onSubmit={editingPage ? handleEditPage : handleAddPage}
+            className="mb-4 space-y-4"
+          >
+            <input
+              type="text"
+              placeholder="Page ID (e.g., about, faq, promotions)"
+              value={editingPage ? editingPage.id : newPage.id}
+              onChange={(e) =>
+                editingPage
+                  ? setEditingPage({ ...editingPage, id: e.target.value })
+                  : setNewPage({ ...newPage, id: e.target.value })
+              }
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white"
+              disabled={editingPage !== null}
+            />
+            <input
+              type="text"
+              placeholder="Russian Title"
+              value={editingPage ? editingPage.title_ru : newPage.title_ru}
+              onChange={(e) =>
+                editingPage
+                  ? setEditingPage({ ...editingPage, title_ru: e.target.value })
+                  : setNewPage({ ...newPage, title_ru: e.target.value })
+              }
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white"
+            />
+            <input
+              type="text"
+              placeholder="English Title"
+              value={editingPage ? editingPage.title_en : newPage.title_en}
+              onChange={(e) =>
+                editingPage
+                  ? setEditingPage({ ...editingPage, title_en: e.target.value })
+                  : setNewPage({ ...newPage, title_en: e.target.value })
+              }
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white"
+            />
+            <select
+              value={
+                editingPage ? editingPage.content_type : newPage.content_type
+              }
+              onChange={(e) =>
+                editingPage
+                  ? setEditingPage({
+                      ...editingPage,
+                      content_type: e.target.value as "text" | "faq",
+                    })
+                  : setNewPage({
+                      ...newPage,
+                      content_type: e.target.value as "text" | "faq",
+                    })
+              }
+              className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white"
+            >
+              <option value="text">Text</option>
+              <option value="faq">FAQ</option>
+            </select>
+            {(editingPage ? editingPage.content_type : newPage.content_type) ===
+            "text" ? (
+              <>
+                <textarea
+                  placeholder="Russian Content"
+                  value={
+                    editingPage
+                      ? typeof editingPage.content_ru === "string"
+                        ? editingPage.content_ru
+                        : ""
+                      : typeof newPage.content_ru === "string"
+                      ? newPage.content_ru
+                      : ""
+                  }
+                  onChange={(e) =>
+                    editingPage
+                      ? setEditingPage({
+                          ...editingPage,
+                          content_ru: e.target.value,
+                        })
+                      : setNewPage({ ...newPage, content_ru: e.target.value })
+                  }
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white h-32"
+                />
+                <textarea
+                  placeholder="English Content"
+                  value={
+                    editingPage
+                      ? typeof editingPage.content_en === "string"
+                        ? editingPage.content_en
+                        : ""
+                      : typeof newPage.content_en === "string"
+                      ? newPage.content_en
+                      : ""
+                  }
+                  onChange={(e) =>
+                    editingPage
+                      ? setEditingPage({
+                          ...editingPage,
+                          content_en: e.target.value,
+                        })
+                      : setNewPage({ ...newPage, content_en: e.target.value })
+                  }
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white h-32"
+                />
+              </>
+            ) : (
+              <>
+                <textarea
+                  placeholder='Russian FAQ Content (JSON format: [{"question": "", "answer": ""}, ...])'
+                  value={
+                    editingPage
+                      ? typeof editingPage.content_ru === "string"
+                        ? editingPage.content_ru
+                        : JSON.stringify(editingPage.content_ru, null, 2)
+                      : typeof newPage.content_ru === "string"
+                      ? newPage.content_ru
+                      : JSON.stringify(newPage.content_ru, null, 2)
+                  }
+                  onChange={(e) =>
+                    editingPage
+                      ? setEditingPage({
+                          ...editingPage,
+                          content_ru: e.target.value,
+                        })
+                      : setNewPage({ ...newPage, content_ru: e.target.value })
+                  }
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white h-32"
+                />
+                <textarea
+                  placeholder='English FAQ Content (JSON format: [{"question": "", "answer": ""}, ...])'
+                  value={
+                    editingPage
+                      ? typeof editingPage.content_en === "string"
+                        ? editingPage.content_en
+                        : JSON.stringify(editingPage.content_en, null, 2)
+                      : typeof newPage.content_en === "string"
+                      ? newPage.content_en
+                      : JSON.stringify(newPage.content_en, null, 2)
+                  }
+                  onChange={(e) =>
+                    editingPage
+                      ? setEditingPage({
+                          ...editingPage,
+                          content_en: e.target.value,
+                        })
+                      : setNewPage({ ...newPage, content_en: e.target.value })
+                  }
+                  className="w-full p-2 rounded bg-gray-800 border border-gray-700 text-white h-32"
+                />
+              </>
+            )}
+            <button
+              type="submit"
+              className="py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600"
+            >
+              {editingPage ? "Update Page" : "Add Page"}
+            </button>
+            {editingPage && (
+              <button
+                type="button"
+                onClick={() => setEditingPage(null)}
+                className="py-2 px-4 bg-gray-700 text-white rounded-md hover:bg-gray-600"
+              >
+                Cancel
+              </button>
+            )}
+          </form>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {pages.map((page: Page) => (
+              <div key={page.id} className="p-4 bg-gray-800 rounded-md">
+                <h3 className="text-lg font-medium">
+                  {page.title_ru} ({page.title_en})
+                </h3>
+                <p className="text-gray-400">Type: {page.content_type}</p>
+                <div className="flex space-x-2 mt-2">
+                  <button
+                    onClick={() => {
+                      setEditingPage({
+                        ...page,
+                        content_ru:
+                          typeof page.content_ru === "string"
+                            ? page.content_ru
+                            : JSON.stringify(page.content_ru, null, 2),
+                        content_en:
+                          typeof page.content_en === "string"
+                            ? page.content_en
+                            : JSON.stringify(page.content_en, null, 2),
+                      });
+                    }}
+                    className="py-1 px-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDeletePage(page.id)}
+                    className="py-1 px-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1027,13 +1348,13 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-red-50 py-8 sm:py-10 md:py-12 px-4 sm:px-6 md:px-8">
-      <div className="max-w-md w-full space-y-6 sm:space-y-7 md:space-y-8 bg-white p-6 sm:p-7 md:p-8 rounded-lg shadow-lg">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-8 sm:py-10 md:py-12 px-4 sm:px-6 md:px-8">
+      <div className="max-w-md w-full space-y-6 sm:space-y-7 md:space-y-8 bg-gray-800 p-6 sm:p-7 md:p-8 rounded-lg shadow-lg">
         <div className="text-center">
-          <h2 className="text-2xl sm:text-2xl md:text-3xl font-extrabold text-red-900">
+          <h2 className="text-2xl sm:text-2xl md:text-3xl font-extrabold text-red-500">
             Адмін панель
           </h2>
-          <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-sm text-red-600">
+          <p className="mt-1 sm:mt-2 text-xs sm:text-sm md:text-sm text-gray-400">
             Введіть свої облікові дані для доступу до адмін панелі
           </p>
         </div>
@@ -1056,7 +1377,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
                 type="text"
                 autoComplete="username"
                 required
-                className="appearance-none rounded relative block w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-red-300 placeholder-red-500 text-red-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 text-xs sm:text-sm md:text-sm"
+                className="appearance-none rounded relative block w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-700 placeholder-gray-400 text-white focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 text-xs sm:text-sm md:text-sm bg-gray-800"
                 placeholder="Логін"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
@@ -1072,7 +1393,7 @@ const AdminLogin = ({ onLogin }: { onLogin: () => void }) => {
                 type="password"
                 autoComplete="current-password"
                 required
-                className="appearance-none rounded relative block w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-red-300 placeholder-red-500 text-red-900 focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 text-xs sm:text-sm md:text-sm"
+                className="appearance-none rounded relative block w-full px-2 sm:px-3 py-1.5 sm:py-2 border border-gray-700 placeholder-gray-400 text-white focus:outline-none focus:ring-red-500 focus:border-red-500 focus:z-10 text-xs sm:text-sm md:text-sm bg-gray-800"
                 placeholder="Пароль"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

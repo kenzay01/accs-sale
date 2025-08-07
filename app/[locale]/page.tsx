@@ -173,11 +173,7 @@ function HomeContent() {
         onClose={() => setIsMenuOpen(false)}
         onMenuItemClick={handleMenuItemClick}
       />
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        selectedItemId={selectedItemId}
-      />
+      {/* <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} /> */}
       <section className="p-4">
         {filteredAndSortedItems.length > 0 ? (
           <div className="flex gap-4 flex-wrap overflow-x-auto pb-2 items-center justify-center">

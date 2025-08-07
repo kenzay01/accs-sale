@@ -7,7 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import type { CartItem, Category, Subcategory } from "@/types/categories";
+import type { CartItem, Category, Subcategory, Page } from "@/types/categories";
 import type { MainItemProps } from "@/types/mainItem";
 
 interface ItemContextType {
@@ -17,6 +17,8 @@ interface ItemContextType {
   setSubcategories: (subcategories: { [key: string]: Subcategory[] }) => void;
   items: MainItemProps[];
   setItems: (items: MainItemProps[]) => void;
+  pages: Page[];
+  setPages: (pages: Page[]) => void;
   addCategory: (formData: FormData) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   editCategory: (id: string, formData: FormData) => Promise<void>;
@@ -33,6 +35,9 @@ interface ItemContextType {
   addItem: (formData: FormData) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   editItem: (id: string, formData: FormData) => Promise<void>;
+  addPage: (formData: FormData) => Promise<void>;
+  deletePage: (id: string) => Promise<void>;
+  editPage: (id: string, formData: FormData) => Promise<void>;
   cartItems: CartItem[];
   setCartItems: (items: CartItem[]) => void;
   addCartItem: (item: CartItem) => void;
@@ -50,6 +55,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
     [key: string]: Subcategory[];
   }>({});
   const [items, setItems] = useState<MainItemProps[]>([]);
+  const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,12 +83,13 @@ export function ItemProvider({ children }: { children: ReactNode }) {
     }
   }, [cartItems]);
 
-  // Fetch categories, subcategories, and items
+  // Fetch categories, subcategories, items, and pages
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       setError(null);
       try {
+        // Fetch categories
         const categoriesRes = await fetch("/api/categories");
         if (!categoriesRes.ok) {
           const errorData = await categoriesRes.json();
@@ -91,6 +98,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         const categoriesData = await categoriesRes.json();
         setCategories(categoriesData);
 
+        // Fetch subcategories
         const subcategoriesData: { [key: string]: Subcategory[] } = {};
         for (const category of categoriesData) {
           const subRes = await fetch(
@@ -114,6 +122,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         }
         setSubcategories(subcategoriesData);
 
+        // Fetch items
         const itemsRes = await fetch("/api/items");
         if (!itemsRes.ok) {
           const errorData = await itemsRes.json();
@@ -131,6 +140,24 @@ export function ItemProvider({ children }: { children: ReactNode }) {
             description_en: item.description_en || "",
             img: item.img,
             timeAdded: item.time_added || new Date().toISOString(),
+          }))
+        );
+
+        // Fetch pages
+        const pagesRes = await fetch("/api/pages");
+        if (!pagesRes.ok) {
+          const errorData = await pagesRes.json();
+          throw new Error(errorData.error || "Failed to fetch pages");
+        }
+        const pagesData = await pagesRes.json();
+        setPages(
+          pagesData.map((page: any) => ({
+            id: page.id,
+            title_ru: page.title_ru,
+            title_en: page.title_en,
+            content_ru: page.content_ru,
+            content_en: page.content_en,
+            content_type: page.content_type,
           }))
         );
       } catch (error: any) {
@@ -248,7 +275,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
             categoryId: newSubcategory.category_id,
             label_ru: newSubcategory.label_ru,
             label_en: newSubcategory.label_en,
-            img: newSubcategory.img, // Expecting /api/images/filename.jpg
+            img: newSubcategory.img,
           },
         ],
       }));
@@ -311,7 +338,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
                 categoryId: updatedSubcategory.category_id,
                 label_ru: updatedSubcategory.label_ru,
                 label_en: updatedSubcategory.label_en,
-                img: updatedSubcategory.img, // Expecting /api/images/filename.jpg
+                img: updatedSubcategory.img,
               }
             : sub
         ),
@@ -343,7 +370,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
           price: parseFloat(newItem.price) || 0,
           description_ru: newItem.description_ru || "",
           description_en: newItem.description_en || "",
-          img: newItem.img, // Expecting /api/images/filename.jpg
+          img: newItem.img,
           timeAdded: newItem.time_added || new Date().toISOString(),
         },
       ]);
@@ -393,7 +420,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
                 price: parseFloat(updatedItem.price) || 0,
                 description_ru: updatedItem.description_ru || "",
                 description_en: updatedItem.description_en || "",
-                img: updatedItem.img, // Expecting /api/images/filename.jpg
+                img: updatedItem.img,
                 timeAdded: updatedItem.time_added || item.timeAdded,
               }
             : item
@@ -401,6 +428,62 @@ export function ItemProvider({ children }: { children: ReactNode }) {
       );
     } catch (error: any) {
       console.error("Failed to edit item:", error);
+      throw error;
+    }
+  };
+
+  const addPage = async (formData: FormData) => {
+    try {
+      const response = await fetch("/api/pages", {
+        method: "POST",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to add page");
+      }
+      const newPage = await response.json();
+      setPages((prev) => [...prev, newPage]);
+    } catch (error: any) {
+      console.error("Failed to add page:", error);
+      throw error;
+    }
+  };
+
+  const deletePage = async (id: string) => {
+    try {
+      const response = await fetch(`/api/pages`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to delete page");
+      }
+      setPages((prev) => prev.filter((page) => page.id !== id));
+    } catch (error: any) {
+      console.error("Failed to delete page:", error);
+      throw error;
+    }
+  };
+
+  const editPage = async (id: string, formData: FormData) => {
+    try {
+      const response = await fetch(`/api/pages`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to edit page");
+      }
+      const updatedPage = await response.json();
+      setPages((prev) =>
+        prev.map((page) => (page.id === id ? updatedPage : page))
+      );
+    } catch (error: any) {
+      console.error("Failed to edit page:", error);
       throw error;
     }
   };
@@ -414,6 +497,8 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         setSubcategories,
         items,
         setItems,
+        pages,
+        setPages,
         addCategory,
         deleteCategory,
         editCategory,
@@ -423,6 +508,9 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         addItem,
         deleteItem,
         editItem,
+        addPage,
+        deletePage,
+        editPage,
         cartItems,
         setCartItems,
         addCartItem,

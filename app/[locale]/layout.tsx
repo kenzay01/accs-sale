@@ -33,6 +33,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         <ItemProvider>
           <main>{children}</main>
+          <div id="modal-root"></div>
         </ItemProvider>
       </body>
     </html>

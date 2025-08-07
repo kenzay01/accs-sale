@@ -22,3 +22,17 @@ export interface CartItem {
   timeAdded: string;
   quantity: number;
 }
+
+export type Page = {
+  id: string;
+  title_ru: string;
+  title_en: string;
+  content_ru: string | FAQ[];
+  content_en: string | FAQ[];
+  content_type: "text" | "faq";
+};
+
+export type FAQ = {
+  question: string;
+  answer: string;
+};

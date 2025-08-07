@@ -114,6 +114,14 @@
       "content": "Belarus\nOne bookmaker for $100\nTwo different bookmakers for $90\nThree or more different bookmakers - $80\nFull bookmaker list $599\n\nGeorgia\nOne bookmaker for $170\nTwo different bookmakers for $160\nThree or more different bookmakers - $155\nFull bookmaker list $999\nMonthly rental $75"
     }
   },
+  "usefulLinks": {
+    "title": "Useful Links",
+    "aboutUs": "About Us",
+    "faq": "FAQ",
+    "promotions": "Promotions",
+    "termsConditions": "Terms & Conditions",
+    "partnerWithUs": "Partner with Us"
+  },
   "main_item": {
     "in_cart": "In cart"
   },

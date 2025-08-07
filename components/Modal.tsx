@@ -1,124 +1,77 @@
-"use client";
-
-import { useState, useEffect } from "react";
+import React from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
-import { useCurrentLanguage } from "@/hooks/getCurrentLanguage";
-import { useDictionary } from "@/hooks/getDictionary";
-import { Locale } from "@/i18n/config";
+import { FAQ } from "@/types/categories";
 
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedItemId: string | null;
+  title: string;
+  content: string | FAQ[];
+  contentType: "text" | "faq";
 }
 
-export default function Modal({ isOpen, onClose, selectedItemId }: ModalProps) {
-  const currentLocale = useCurrentLanguage() as Locale;
-  const { dict } = useDictionary(currentLocale);
-
-  const [isVisible, setIsVisible] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
-
-  useEffect(() => {
-    if (isOpen) {
-      setIsVisible(true);
-      setTimeout(() => setIsAnimating(true), 10);
-    } else {
-      setIsAnimating(false);
-      const timer = setTimeout(() => setIsVisible(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
-  useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = "fixed";
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = "100%";
-      document.body.style.overflow = "hidden";
-
-      return () => {
-        document.body.style.position = "";
-        document.body.style.top = "";
-        document.body.style.width = "";
-        document.body.style.overflow = "";
-        window.scrollTo(0, scrollY);
-      };
-    }
-  }, [isOpen]);
-
-  if (!isVisible) return null;
-
-  const getModalContent = () => {
-    switch (selectedItemId) {
-      case "onas":
-        return {
-          title: dict?.modal.about_us.title || "About Us",
-          content: dict?.modal.about_us.content || "Content not available",
-        };
-      case "chasto":
-        return {
-          title: dict?.modal.faq.title || "Frequently Asked Questions",
-          content: dict?.modal.faq.questions || [],
-        };
-      case "vip":
-        return {
-          title: dict?.modal.vip.title || "VIP",
-          content: dict?.modal.vip.content || "Content not available",
-        };
-      case "akcii":
-        return {
-          title: dict?.modal.promotions.title || "Promotions",
-          content: dict?.modal.promotions.content || "Content not available",
-        };
-      default:
-        return { title: "Unknown", content: "Content not available" };
-    }
-  };
-
-  const { title, content } = getModalContent();
-
-  return (
-    <>
-      {/* Backdrop */}
-      <div
-        className={`fixed inset-0 z-[70] transition-all duration-300 ${
-          isAnimating ? "bg-black/50" : "bg-black/0"
-        }`}
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div
-        className={`fixed top-1/2 left-1/2 transform z-[70] -translate-x-1/2 -translate-y-1/2 bg-gray-950 border-2 border-red-500 p-6 rounded-lg shadow-lg w-11/12 max-w-md transition-all duration-300 ${
-          isAnimating ? "opacity-100 scale-100" : "opacity-0 scale-95"
-        }`}
+const renderTextWithLinks = (text: string) => {
+  const urlRegex = /(t\.me\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, index) =>
+    urlRegex.test(part) ? (
+      <a
+        key={index}
+        href={part}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-blue-400 hover:underline"
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">{title}</h2>
-          <button onClick={onClose} className="text-white hover:text-red-500">
-            <X className="w-6 h-6" />
+        {part}
+      </a>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  );
+};
+
+const Modal = ({
+  isOpen,
+  onClose,
+  title,
+  content,
+  contentType,
+}: ModalProps) => {
+  if (!isOpen) return null;
+
+  const modalContent = (
+    <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-[80]">
+      <div className="bg-gray-950 rounded-lg p-8 w-full max-w-4xl max-h-[90vh] overflow-y-auto mx-4">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold text-white">{title}</h2>
+          <button
+            onClick={onClose}
+            className="text-white hover:text-gray-300 transition-colors"
+          >
+            <X className="w-8 h-8" />
           </button>
         </div>
-        <div className="max-h-[60vh] overflow-y-auto">
-          {" "}
-          {/* Height limit and scroll */}
-          {Array.isArray(content) ? (
-            <ul className="space-y-4">
-              {content.map((item, index) => (
-                <li key={index}>
-                  <h3 className="font-semibold">{item.question}</h3>
-                  <p className="text-gray-300 whitespace-pre-line text-sm">
-                    {item.answer}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-300 whitespace-pre-line">{content}</p>
-          )}
-        </div>
+        {contentType === "text" ? (
+          <p className="text-gray-300 whitespace-pre-line">
+            {renderTextWithLinks(content as string)}
+          </p>
+        ) : (
+          <div className="space-y-6">
+            {(content as FAQ[]).map((faq, index) => (
+              <div key={index}>
+                <h3 className="font-semibold text-white">{faq.question}</h3>
+                <p className="text-gray-400 text-sm">{faq.answer}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
-}
+
+  // Render the modal content into the document body using a portal
+  return createPortal(modalContent, document.body);
+};
+
+export default Modal;

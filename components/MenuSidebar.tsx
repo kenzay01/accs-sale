@@ -101,7 +101,7 @@ export default function MenuSidebar({
             </button>
           </div>
 
-          <UsefulLinks handleMenuItemClick={handleMenuItemClick} />
+          <UsefulLinks />
         </div>
         <div className="p-4 border-t border-red-500">
           <LanguageSwitcher currentLocale={currentLocale} />

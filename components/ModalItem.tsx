@@ -240,7 +240,7 @@ export default function ModalItem({
               </button>
             )}
           </div>
-          <UsefulLinks handleMenuItemClick={handleMenuItemClick} />
+          <UsefulLinks />
         </div>
         <div></div>
         {cartItems.length > 0 && <div className="h-16" />}

@@ -29,7 +29,9 @@ export default function Header() {
         </div>
         <div>
           <Link
-            href="/"
+            href="https://t.me/Zest09"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-sm py-2 px-4 rounded-full transition-colors cursor-pointer bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 hover:border-red-500 text-white flex items-center"
           >
             <Rocket className="inline mr-1.5 w-5 h-auto" />
@@ -39,7 +41,7 @@ export default function Header() {
           </Link>
         </div>
       </div>
-      <div className="flex flex-col gap-2">
+      {/* <div className="flex flex-col gap-2">
         <button
           onClick={() => setIsOpenDropDown(!isOpenDropDown)}
           className="flex items-center justify-between w-full px-4 py-2 bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 hover:border-red-500 rounded  transition-colors"
@@ -63,7 +65,7 @@ export default function Header() {
             </ul>
           </div>
         )}
-      </div>
+      </div> */}
     </header>
   );
 }

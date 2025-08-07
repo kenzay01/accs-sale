@@ -315,17 +315,16 @@ export default function ShoppingCart() {
           )}
           <div className="bg-gray-950 border-2 border-gray-800 rounded-xl p-6 mb-6">
             <UsefulLinks
-              handleMenuItemClick={handleMenuItemClick}
-              noNeededMt={true}
+            // noNeededMt={true}
             />
           </div>
         </div>
       </div>
-      <Modal
+      {/* <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         selectedItemId={selectedItemId}
-      />
+      /> */}
     </>
   );
 }

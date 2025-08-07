@@ -18,6 +18,15 @@ import type { Category, Subcategory } from "@/types/categories";
 import { useItemContext } from "@/context/itemsContext";
 import { v4 as uuidv4 } from "uuid";
 
+// Add global type declaration for window.Telegram
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp?: any;
+    };
+  }
+}
+
 function HomeContent() {
   const { categories, subcategories, items } = useItemContext();
   const currentLanguage = useCurrentLanguage() as Locale;
@@ -114,6 +123,11 @@ function HomeContent() {
     setSelectedSubcategory(subcategoryId);
   };
 
+  let tg =
+    typeof window !== "undefined" && window.Telegram && window.Telegram.WebApp
+      ? window.Telegram.WebApp
+      : undefined;
+
   return (
     <div className="relative min-h-screen text-white">
       <CartButton />
@@ -147,6 +161,7 @@ function HomeContent() {
           />
         </div>
       </div>
+      <h1>{tg.initDataUnsafe.user.first_name}</h1>
       <CategorySelector
         onSelectionChange={handleSelectionChange}
         categories={categories}

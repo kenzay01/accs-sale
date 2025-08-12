@@ -85,6 +85,37 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
     null
   ) as React.RefObject<HTMLInputElement>;
 
+  // Стан для управління модальним вікном
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteAction, setDeleteAction] = useState<
+    (() => Promise<void>) | null
+  >(null);
+  const [deleteItemName, setDeleteItemName] = useState("");
+
+  // Функція для відкриття модального вікна
+  const openDeleteModal = (action: () => Promise<void>, itemName: string) => {
+    setDeleteAction(() => action); // Зберігаємо функцію видалення
+    setDeleteItemName(itemName); // Зберігаємо назву елемента
+    setIsModalOpen(true);
+  };
+
+  // Функція для підтвердження видалення
+  const confirmDelete = async () => {
+    if (deleteAction) {
+      await deleteAction(); // Викликаємо збережену функцію видалення
+    }
+    setIsModalOpen(false); // Закриваємо модальне вікно
+    setDeleteAction(null);
+    setDeleteItemName("");
+  };
+
+  // Функція для закриття модального вікна
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setDeleteAction(null);
+    setDeleteItemName("");
+  };
+
   const handleImageChange = (
     e: React.ChangeEvent<HTMLInputElement>,
     setImage: React.Dispatch<React.SetStateAction<File | null>>,
@@ -482,6 +513,38 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
     }
   };
 
+  const DeleteConfirmationModal = () => (
+    <div
+      className={`fixed inset-0 bg-black/70 flex items-center justify-center z-50 ${
+        isModalOpen ? "block" : "hidden"
+      }`}
+    >
+      <div className="bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm w-full">
+        <h3 className="text-lg font-semibold text-white mb-4">
+          Підтвердження видалення
+        </h3>
+        <p className="text-gray-300 mb-6">
+          Ви впевнені, що хочете видалити `{deleteItemName}`? Цю дію не можна
+          скасувати.
+        </p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={closeModal}
+            className="py-2 px-4 bg-gray-600 text-white rounded-md hover:bg-gray-700"
+          >
+            Скасувати
+          </button>
+          <button
+            onClick={confirmDelete}
+            className="py-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-600"
+          >
+            Видалити
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
@@ -671,7 +734,12 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteCategory(category.id)}
+                    onClick={() =>
+                      openDeleteModal(
+                        () => handleDeleteCategory(category.id),
+                        category.label_ru
+                      )
+                    }
                     className="py-1 px-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
                   >
                     Delete
@@ -861,7 +929,10 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
                       </button>
                       <button
                         onClick={() =>
-                          handleDeleteSubcategory(category.id, sub.id)
+                          openDeleteModal(
+                            () => handleDeleteSubcategory(category.id, sub.id),
+                            sub.label_ru
+                          )
                         }
                         className="py-1 px-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
                       >
@@ -1101,7 +1172,12 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeleteItem(item.id)}
+                    onClick={() =>
+                      openDeleteModal(
+                        () => handleDeleteItem(item.id),
+                        item.name
+                      )
+                    }
                     className="py-1 px-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
                   >
                     Delete
@@ -1308,7 +1384,12 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDeletePage(page.id)}
+                    onClick={() =>
+                      openDeleteModal(
+                        () => handleDeletePage(page.id),
+                        page.title_ru
+                      )
+                    }
                     className="py-1 px-2 bg-red-500 text-white rounded-md hover:bg-red-600"
                   >
                     Delete
@@ -1318,6 +1399,7 @@ const AdminDashboard = ({ onLogout }: { onLogout: () => void }) => {
             ))}
           </div>
         </div>
+        <DeleteConfirmationModal />
       </div>
     </div>
   );

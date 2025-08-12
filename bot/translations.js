@@ -35,6 +35,14 @@ const translations = {
     support: "📞 Поддержка",
     catalog_message: "🛍️ Нажмите кнопку ниже, чтобы открыть каталог:",
   },
+  orders_empty:
+    "У вас пока нет заказов 📭\n\nВыберите товары в каталоге и оформите первый заказ!",
+  orders_list: "📦 *Ваши заказы:*",
+  order_status_pending: "⏳ В обработке",
+  order_status_processing: "🔄 Выполняется",
+  order_status_completed: "✅ Завершен",
+  order_status_cancelled: "❌ Отменен",
+  back_to_menu: "↩️ Вернуться в меню",
   en: {
     welcome: `🎉 *Welcome!*
 
@@ -72,6 +80,14 @@ I am the *Accs-Sale* project bot 🤖
     support: "📞 Support",
     catalog_message: "🛍️ Click the button below to open the catalog:",
   },
+  orders_empty:
+    "You don't have any orders yet 📭\n\nBrowse the catalog and place your first order!",
+  orders_list: "📦 *Your Orders:*",
+  order_status_pending: "⏳ Processing",
+  order_status_processing: "🔄 In Progress",
+  order_status_completed: "✅ Completed",
+  order_status_cancelled: "❌ Cancelled",
+  back_to_menu: "↩️ Back to Menu",
 };
 
 module.exports = translations;

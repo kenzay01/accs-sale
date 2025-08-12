@@ -1,10 +1,6 @@
-// const sqlite3 = require("sqlite3").verbose();
-// const path = require("path");
-// const fs = require("fs").promises;
-
-import sqlite3 from "sqlite3";
-import path from "path";
-import fs from "fs/promises";
+const sqlite3 = require("sqlite3").verbose();
+const path = require("path");
+const fs = require("fs").promises;
 
 let dbInstance = null;
 
@@ -12,7 +8,7 @@ class DatabaseManager {
   constructor() {
     if (dbInstance) return dbInstance;
 
-    const dbDir = path.join(process.cwd(), "data");
+    const dbDir = path.join(process.cwd(), "../data");
     this.dbPath = path.join(dbDir, "bot.db");
 
     // Ensure the data directory exists
@@ -510,4 +506,4 @@ class DatabaseManager {
   }
 }
 
-export default DatabaseManager;
+module.exports = DatabaseManager;

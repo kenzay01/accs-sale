@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
-import DatabaseManager from "@/database"; // Use default import for the class
+import { NextResponse, NextRequest } from "next/server";
+import DatabaseManager from "@/database"; // Використовуємо дефолтний імпорт для класу
 let dbInstance: DatabaseManager | null = null;
 
+// Функція для отримання екземпляра бази даних
 async function getDb(): Promise<DatabaseManager> {
   if (!dbInstance) {
     const { default: Database } = await import("@/database");
@@ -9,6 +10,10 @@ async function getDb(): Promise<DatabaseManager> {
   }
   return dbInstance;
 }
+
+// Імпортуємо обробники з інших роутів
+import { POST as uploadImageHandler } from "@/app/api/upload-image/route";
+import { DELETE as deleteImageHandler } from "@/app/api/delete-image/route";
 
 export async function GET() {
   try {
@@ -24,7 +29,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const db = await getDb();
     const formData = await request.formData();
@@ -36,17 +41,14 @@ export async function POST(request: Request) {
       );
     }
 
-    // Get the base URL from the request
-    const baseUrl = new URL(request.url).origin;
-
-    // Upload image
+    // Виклик внутрішнього обробника замість fetch
     const uploadFormData = new FormData();
     uploadFormData.append("image", imgFile);
-    const uploadResponse = await fetch(`${baseUrl}/api/upload-image`, {
+    const mockReq = new NextRequest("http://localhost/api/upload-image", {
       method: "POST",
       body: uploadFormData,
     });
-
+    const uploadResponse = await uploadImageHandler(mockReq);
     if (!uploadResponse.ok) {
       throw new Error(`Image upload failed: ${uploadResponse.statusText}`);
     }
@@ -78,7 +80,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
     const db = await getDb();
     const formData = await request.formData();
@@ -90,20 +92,16 @@ export async function PUT(request: Request) {
       );
     }
 
-    // Get the base URL from the request
-    const baseUrl = new URL(request.url).origin;
-
     const imgFile = formData.get("img") as File | null;
     let imgPath = formData.get("img") as string | null;
     if (imgFile) {
-      // Upload new image
       const uploadFormData = new FormData();
       uploadFormData.append("image", imgFile);
-      const uploadResponse = await fetch(`${baseUrl}/api/upload-image`, {
+      const mockReq = new NextRequest("http://localhost/api/upload-image", {
         method: "POST",
         body: uploadFormData,
       });
-
+      const uploadResponse = await uploadImageHandler(mockReq);
       if (!uploadResponse.ok) {
         throw new Error(`Image upload failed: ${uploadResponse.statusText}`);
       }
@@ -113,17 +111,15 @@ export async function PUT(request: Request) {
       }
       imgPath = uploadData.imageUrl;
 
-      // Delete old image if exists
       const oldItem = (await db.getItemById(id)) as { img?: string };
       if (oldItem?.img && oldItem.img !== imgPath) {
-        await fetch(
-          `${baseUrl}/api/delete-image?imageUrl=${encodeURIComponent(
+        const deleteMockReq = new NextRequest(
+          `http://localhost/api/delete-image?imageUrl=${encodeURIComponent(
             oldItem.img
           )}`,
-          {
-            method: "DELETE",
-          }
+          { method: "DELETE" }
         );
+        await deleteImageHandler(deleteMockReq);
       }
     }
 
@@ -156,7 +152,7 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
     const db = await getDb();
     const { id } = await request.json();
@@ -167,18 +163,15 @@ export async function DELETE(request: Request) {
       );
     }
 
-    // Get the base URL from the request
-    const baseUrl = new URL(request.url).origin;
-
-    // Delete associated image
     const item = (await db.getItemById(id)) as { img?: string } | null;
     if (item?.img) {
-      await fetch(
-        `${baseUrl}/api/delete-image?imageUrl=${encodeURIComponent(item.img)}`,
-        {
-          method: "DELETE",
-        }
+      const deleteMockReq = new NextRequest(
+        `http://localhost/api/delete-image?imageUrl=${encodeURIComponent(
+          item.img
+        )}`,
+        { method: "DELETE" }
       );
+      await deleteImageHandler(deleteMockReq);
     }
 
     await db.deleteItem(id);

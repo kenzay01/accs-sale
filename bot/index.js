@@ -1,6 +1,6 @@
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
-const Database = require("../database").default;
+const Database = require("./database");
 const translations = require("./translations");
 
 // Отримуємо токен з змінних середовища
@@ -15,6 +15,12 @@ if (!token) {
 // Створюємо екземпляр бота
 const bot = new TelegramBot(token, { polling: true });
 
+// Функція для екранування спецсимволів MarkdownV2
+function escapeMarkdownV2(text) {
+  if (!text) return "";
+  return text.replace(/([_*\[\]()~`>#+\-=|{}.!\\])/g, "\\$1");
+}
+
 // Клас для управління ботом
 class AccsSaleBot {
   constructor() {
@@ -24,24 +30,20 @@ class AccsSaleBot {
   }
 
   setupEventHandlers() {
-    // Обробка команди /start
     bot.onText(/\/start/, (msg) => {
       this.handleStart(msg);
     });
 
-    // Обробка callback_query (натискання кнопок)
     bot.on("callback_query", (query) => {
       this.handleCallbackQuery(query);
     });
 
-    // Обробка текстових повідомлень
     bot.on("message", (msg) => {
       if (msg.text && !msg.text.startsWith("/")) {
         this.handleTextMessage(msg);
       }
     });
 
-    // Обробка помилок
     bot.on("error", (error) => {
       console.error("Помилка бота:", error);
     });
@@ -57,14 +59,11 @@ class AccsSaleBot {
     };
 
     try {
-      // Check if user already exists and has a language set
       const existingUser = await this.db.getUser(msg.from.id);
 
       if (existingUser && existingUser.language) {
-        // User already has a language set, show main menu directly
         this.showMainMenu(chatId, existingUser.language);
       } else {
-        // New user or user without language, show language selection
         await this.db.createOrUpdateUser(userData);
         this.showLanguageSelection(chatId);
       }
@@ -84,7 +83,6 @@ class AccsSaleBot {
       ],
     };
 
-    // Using Russian welcome message since it now contains both languages
     bot.sendMessage(chatId, translations.ru.welcome, {
       reply_markup: keyboard,
       parse_mode: "Markdown",
@@ -95,8 +93,8 @@ class AccsSaleBot {
     const t = translations[language];
     const catalogUrl =
       language === "en"
-        ? "https://accs-sale.vercel.app/en"
-        : "https://accs-sale.vercel.app/ru";
+        ? `https://accs-sale.vercel.app/en?userId=${chatId}`
+        : `https://accs-sale.vercel.app/ru?userId=${chatId}`;
 
     const keyboard = {
       keyboard: [
@@ -122,7 +120,6 @@ class AccsSaleBot {
     const chatId = query.message.chat.id;
     const data = query.data;
 
-    // Відповідаємо на callback query
     bot.answerCallbackQuery(query.id);
 
     try {
@@ -175,7 +172,6 @@ class AccsSaleBot {
           this.showSupport(chatId, language);
           break;
         default:
-          // Якщо не розпізнали команду, можливо це WebApp дані
           if (msg.web_app_data) {
             this.handleWebAppData(msg);
           } else {
@@ -194,22 +190,39 @@ class AccsSaleBot {
       const t = translations[language];
 
       if (orders.length === 0) {
-        bot.sendMessage(chatId, t.orders_empty);
+        bot.sendMessage(chatId, t.orders_empty, { parse_mode: "Markdown" });
         return;
       }
 
-      let message = t.orders_list;
+      let message = `📦 *${escapeMarkdownV2(t.orders_list)}*\n`;
+
       orders.forEach((order, index) => {
-        const date = new Date(order.created_at).toLocaleDateString();
-        message += `${index + 1}. ${order.product_name} - $${order.price} (${
-          order.status
-        })\nДата: ${date}\n\n`;
+        // Створюємо об'єкт Date з created_at
+        const dateObj = new Date(order.created_at);
+
+        // Форматуємо дату для України
+        const date = dateObj.toLocaleDateString("uk-UA");
+
+        // Форматуємо час з явним часовим поясом для України (EEST, UTC+3)
+        const time = dateObj.toLocaleTimeString("uk-UA", {
+          hour: "2-digit",
+          minute: "2-digit",
+          timeZone: "Europe/Kiev", // Явно вказуємо часовий пояс України
+        });
+
+        message += `${index + 1}\\. *${escapeMarkdownV2(
+          order.product_name
+        )}*\n`;
+        message += `💰 $${escapeMarkdownV2(order.price.toString())}\n`;
+        message += `📅 ${escapeMarkdownV2(date)} ${escapeMarkdownV2(time)}\n\n`;
       });
 
-      bot.sendMessage(chatId, message);
+      bot.sendMessage(chatId, message, {
+        parse_mode: "MarkdownV2",
+      });
     } catch (error) {
       console.error("Error getting orders:", error);
-      bot.sendMessage(chatId, "❌ Error getting orders");
+      bot.sendMessage(chatId, "❌ Ошибка при получении заказов");
     }
   }
 

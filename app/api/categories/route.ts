@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { Category } from "@/types/categories";
-import DatabaseManager from "@/database"; // Use default import for the class
+import DatabaseManager from "@/database";
 let dbInstance: DatabaseManager | null = null;
 
 async function getDb(): Promise<DatabaseManager> {
@@ -10,6 +10,10 @@ async function getDb(): Promise<DatabaseManager> {
   }
   return dbInstance;
 }
+
+// Імпортуємо обробники з інших роутів
+import { POST as uploadImageHandler } from "@/app/api/upload-image/route";
+import { DELETE as deleteImageHandler } from "@/app/api/delete-image/route";
 
 export async function GET() {
   try {
@@ -25,7 +29,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const db = await getDb();
     const formData = await request.formData();
@@ -37,15 +41,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const baseUrl = new URL(request.url).origin;
-
+    // Виклик внутрішнього обробника замість fetch
     const uploadFormData = new FormData();
     uploadFormData.append("image", imgFile);
-    const uploadResponse = await fetch(`${baseUrl}/api/upload-image`, {
+    const mockReq = new NextRequest("http://localhost/api/upload-image", {
       method: "POST",
       body: uploadFormData,
     });
-
+    const uploadResponse = await uploadImageHandler(mockReq);
     if (!uploadResponse.ok) {
       throw new Error(`Image upload failed: ${uploadResponse.statusText}`);
     }
@@ -72,7 +75,7 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
     const db = await getDb();
     const formData = await request.formData();
@@ -84,18 +87,16 @@ export async function PUT(request: Request) {
       );
     }
 
-    const baseUrl = new URL(request.url).origin;
-
     const imgFile = formData.get("img") as File | null;
     let imgPath = formData.get("img") as string | null;
     if (imgFile) {
       const uploadFormData = new FormData();
       uploadFormData.append("image", imgFile);
-      const uploadResponse = await fetch(`${baseUrl}/api/upload-image`, {
+      const mockReq = new NextRequest("http://localhost/api/upload-image", {
         method: "POST",
         body: uploadFormData,
       });
-
+      const uploadResponse = await uploadImageHandler(mockReq);
       if (!uploadResponse.ok) {
         throw new Error(`Image upload failed: ${uploadResponse.statusText}`);
       }
@@ -107,12 +108,13 @@ export async function PUT(request: Request) {
 
       const oldCategory = (await db.getCategoryById(id)) as Category | null;
       if (oldCategory?.img && oldCategory.img !== imgPath) {
-        await fetch(
-          `${baseUrl}/api/delete-image?imageUrl=${encodeURIComponent(
+        const deleteMockReq = new NextRequest(
+          `http://localhost/api/delete-image?imageUrl=${encodeURIComponent(
             oldCategory.img
           )}`,
           { method: "DELETE" }
         );
+        await deleteImageHandler(deleteMockReq);
       }
     }
 
@@ -139,7 +141,7 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
     const db = await getDb();
     const { id } = await request.json();
@@ -150,16 +152,15 @@ export async function DELETE(request: Request) {
       );
     }
 
-    const baseUrl = new URL(request.url).origin;
-
     const category = (await db.getCategoryById(id)) as Category | null;
     if (category?.img) {
-      await fetch(
-        `${baseUrl}/api/delete-image?imageUrl=${encodeURIComponent(
+      const deleteMockReq = new NextRequest(
+        `http://localhost/api/delete-image?imageUrl=${encodeURIComponent(
           category.img
         )}`,
         { method: "DELETE" }
       );
+      await deleteImageHandler(deleteMockReq);
     }
 
     await db.deleteCategory(id);

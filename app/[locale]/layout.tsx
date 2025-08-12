@@ -4,7 +4,6 @@ import { Metadata } from "next";
 import Script from "next/script";
 import "../globals.css";
 import { ItemProvider } from "@/context/itemsContext";
-import { TelegramProvider } from "@/context/TelegramProvider";
 
 const inter = Inter({ subsets: ["latin", "cyrillic"] });
 
@@ -37,12 +36,10 @@ export default function RootLayout({
         />
       </head>
       <body className={inter.className}>
-        <TelegramProvider>
-          <ItemProvider>
-            <main>{children}</main>
-            <div id="modal-root"></div>
-          </ItemProvider>
-        </TelegramProvider>
+        <ItemProvider>
+          <main>{children}</main>
+          <div id="modal-root"></div>
+        </ItemProvider>
       </body>
     </html>
   );

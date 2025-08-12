@@ -15,10 +15,8 @@ import bgImage from "@/public/bgImage.jpg";
 import CartButton from "@/components/CartButton";
 import { useItemContext } from "@/context/itemsContext";
 import { v4 as uuidv4 } from "uuid";
-import { useTelegram } from "@/context/TelegramProvider";
 
 function HomeContent() {
-  const { webApp, user } = useTelegram();
   const { categories, subcategories, items } = useItemContext();
   const currentLanguage = useCurrentLanguage() as Locale;
   const { dict } = useDictionary(currentLanguage);
@@ -33,29 +31,6 @@ function HomeContent() {
     null
   );
   const { cartItems } = useItemContext();
-
-  const [isDebugMode, setIsDebugMode] = useState(false);
-
-  useEffect(() => {
-    // Увімкни debug режим якщо не в Telegram
-    if (!webApp && typeof window !== "undefined") {
-      setIsDebugMode(true);
-      console.log("Debug mode enabled - not running in Telegram");
-    }
-  }, [webApp]);
-
-  // Mock користувач для тестування поза Telegram
-  const mockUser = isDebugMode
-    ? {
-        id: 12345678,
-        first_name: "Test",
-        last_name: "User",
-        username: "testuser",
-        language_code: "ru",
-      }
-    : null;
-
-  const displayUser = user || mockUser;
 
   const filterOptions = dict?.home.filter_options || [
     { id: "rates", label: "By rates" },
@@ -159,32 +134,7 @@ function HomeContent() {
           />
         </div>
       </div>
-      <div className="p-4">
-        {isDebugMode && (
-          <div className="bg-yellow-900 border border-yellow-600 rounded p-3 mb-4">
-            <p className="text-yellow-200">
-              ⚠️ Debug Mode: Not running in Telegram
-            </p>
-          </div>
-        )}
 
-        {displayUser ? (
-          <div className="bg-gray-800 rounded p-4 mb-4">
-            <h1 className="text-xl mb-2">Welcome, {displayUser.first_name}!</h1>
-            <div className="text-sm text-gray-300">
-              <p>ID: {displayUser.id}</p>
-              {displayUser.username && <p>Username: @{displayUser.username}</p>}
-              {displayUser.language_code && (
-                <p>Language: {displayUser.language_code}</p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div className="bg-red-900 border border-red-600 rounded p-3 mb-4">
-            <p className="text-red-200">❌ Please open this app in Telegram.</p>
-          </div>
-        )}
-      </div>
       <CategorySelector
         onSelectionChange={handleSelectionChange}
         categories={categories}

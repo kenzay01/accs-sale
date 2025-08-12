@@ -5,13 +5,12 @@ import { useItemContext } from "@/context/itemsContext";
 import { useCurrentLanguage } from "@/hooks/getCurrentLanguage";
 import { useDictionary } from "@/hooks/getDictionary";
 import { Locale } from "@/i18n/config";
-import { Plus, Minus, X, ChevronRight } from "lucide-react";
+import { Plus, Minus, X, ChevronRight, CheckCircle } from "lucide-react";
 import Image from "next/image";
 import bgImage from "@/public/bgImage.jpg";
 import type { CartItem } from "@/types/categories";
 import Link from "next/link";
 import UsefulLinks from "@/components/UsefulLinks";
-import Modal from "@/components/Modal";
 import { useRouter } from "next/navigation";
 
 export default function ShoppingCart() {
@@ -20,9 +19,17 @@ export default function ShoppingCart() {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-  const [telegramUsername, setTelegramUsername] = useState(""); // State for Telegram username
+  const [isOrderPlaced, setIsOrderPlaced] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Form data
+  const [customerName, setCustomerName] = useState("");
+  const [telegramUsername, setTelegramUsername] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("USDT");
+  const [agreeToRules, setAgreeToRules] = useState(false);
+
   const { dict } = useDictionary(currentLanguage as Locale);
-  const { cartItems, addCartItem, removeCartItem, setCartItems } =
+  const { cartItems, addCartItem, removeCartItem, setCartItems, userId } =
     useItemContext();
 
   const totalPrice = useMemo(() => {
@@ -56,23 +63,127 @@ export default function ShoppingCart() {
     removeCartItem(itemId);
   };
 
-  const handleMenuItemClick = (itemId: string) => {
-    setSelectedItemId(itemId);
-    setIsModalOpen(true);
-  };
-
   const handleCheckout = () => {
+    if (!userId) {
+      alert(
+        "Помилка: не знайдено ID користувача. Будь ласка, перейдіть до каталогу через Telegram бот."
+      );
+      return;
+    }
     setIsCheckoutOpen(true);
   };
 
-  const handleOrderSubmit = (event: React.FormEvent) => {
+  const handleOrderSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    // Logic to send order to managers' group
-    console.log("Order submitted for processing", { telegramUsername });
-    setIsCheckoutOpen(false);
-    setCartItems([]);
-    localStorage.removeItem("cartItems");
-    router.push(`/${currentLanguage}/`);
+
+    if (!userId) {
+      alert("Помилка: не знайдено ID користувача");
+      return;
+    }
+
+    if (!agreeToRules) {
+      alert(
+        dict?.shopping_cart?.agree_rules_error ||
+          "Пожалуйста, согласитесь с правилами"
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Крок 1: Створюємо замовлення
+      const orderResponse = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          customerName,
+          telegramUsername,
+          cartItems,
+          totalPrice,
+          paymentMethod,
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      const orderResult = await orderResponse.json();
+      console.log("Order created successfully:", orderResult);
+
+      // Крок 2: Формуємо повідомлення для Telegram
+      let telegramMessage = `🛒 *Нове замовлення*\n\n`;
+      telegramMessage += `👤 *Клієнт:* ${customerName.replace(
+        /([_*[\]()~`#+-=|{}.!])/g,
+        "\\$1"
+      )}\n`;
+      telegramMessage += `📱 *Telegram:* ${telegramUsername.replace(
+        /([_*[\]()~`#+-=|{}.!])/g,
+        "\\$1"
+      )}\n`;
+      telegramMessage += `💳 *Спосіб оплати:* ${paymentMethod.replace(
+        /([_*[\]()~`#+-=|{}.!])/g,
+        "\\$1"
+      )}\n`;
+      telegramMessage += `🆔 *ID користувача:* ${userId}\n\n`;
+      telegramMessage += `📦 *Товари:*\n`;
+
+      cartItems.forEach((item, index) => {
+        telegramMessage += `${index + 1}\\. ${item.name.replace(
+          /([_*[\]()~`#+-=|{}.!])/g,
+          "\\$1"
+        )}\n`;
+        telegramMessage += `   • Кількість: ${item.quantity}\n`;
+        telegramMessage += `   • Ціна за одиницю: ${item.price
+          .toFixed(2)
+          .replace(".", "\\.")}\n`;
+        telegramMessage += `   • Сума: ${(item.price * item.quantity)
+          .toFixed(2)
+          .replace(".", "\\.")}\n\n`;
+      });
+
+      telegramMessage += `💰 *Загальна сума:* ${totalPrice
+        .toFixed(2)
+        .replace(".", "\\.")}\n\n`;
+      telegramMessage += `📅 *Дата замовлення:* ${new Date()
+        .toLocaleString("uk-UA")
+        .replace(/([_*[\]()~`#+-=|{}.!])/g, "\\$1")}\n`;
+
+      // Крок 3: Надсилаємо повідомлення в Telegram
+      const telegramResponse = await fetch("/api/send-telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: telegramMessage,
+        }),
+      });
+
+      if (!telegramResponse.ok) {
+        console.error("Failed to send Telegram message");
+        // Не кидаємо помилку, лише логуємо, оскільки замовлення вже створено
+      }
+
+      // Крок 4: Очищаємо кошик і показуємо повідомлення про успіх
+      setCartItems([]);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("cartItems");
+      }
+
+      setIsOrderPlaced(true);
+      setIsCheckoutOpen(false);
+
+      // Перенаправлення через 3 секунди
+      setTimeout(() => {
+        router.push(`/${currentLanguage}/`);
+      }, 3000);
+    } catch (error) {
+      console.error("Error creating order:", error);
+      alert("Помилка при створенні замовлення. Спробуйте ще раз.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Handle Telegram input focus to prepend @
@@ -101,6 +212,36 @@ export default function ShoppingCart() {
       e.preventDefault();
     }
   };
+
+  // Success screen
+  if (isOrderPlaced) {
+    return (
+      <div className="relative min-h-screen text-white flex items-center justify-center">
+        <div className="absolute inset-0 -z-1">
+          <Image
+            src={bgImage}
+            alt="Background"
+            fill
+            style={{ objectFit: "cover" }}
+          />
+        </div>
+        <div className="relative z-10 text-center p-8">
+          <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-6" />
+          <h1 className="text-3xl font-bold mb-4">
+            {dict?.shopping_cart?.order_success || "Заказ успешно оформлен!"}
+          </h1>
+          <p className="text-gray-300 mb-6">
+            {dict?.shopping_cart?.order_success_text ||
+              "Наш менеджер свяжется с вами в ближайшее время"}
+          </p>
+          <p className="text-sm text-gray-400">
+            {dict?.shopping_cart?.redirect_text ||
+              "Вы будете перенаправлены на главную страницу через несколько секунд..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -136,6 +277,14 @@ export default function ShoppingCart() {
               )}
             </button>
           </div>
+
+          {/* User ID display (for debugging) */}
+          {userId && (
+            <div className="bg-gray-900 border border-gray-700 rounded-lg p-3 mb-4 text-sm">
+              <span className="text-gray-400">User ID: </span>
+              <span className="text-white">{userId}</span>
+            </div>
+          )}
 
           {!isCheckoutOpen && (
             <div>
@@ -240,13 +389,25 @@ export default function ShoppingCart() {
                   {/* Checkout Button */}
                   <button
                     onClick={handleCheckout}
-                    className="w-full bg-gradient-to-r from-red-500 to-red-700 text-white py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-lg shadow-xl"
+                    disabled={!userId}
+                    className={`w-full py-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-3 font-semibold text-lg shadow-xl ${
+                      userId
+                        ? "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    }`}
                   >
                     <span>
                       {dict?.shopping_cart?.checkout || "К оформлению"}
                     </span>
                     <ChevronRight className="w-6 h-6" />
                   </button>
+
+                  {!userId && (
+                    <p className="text-red-400 text-sm mt-2 text-center">
+                      {dict?.shopping_cart?.no_user_id ||
+                        "Для оформлення замовлення потрібно перейти через Telegram бот"}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -260,8 +421,12 @@ export default function ShoppingCart() {
                   <label className="block text-sm mb-1">
                     {dict?.header?.payment || "Оплата"}
                   </label>
-                  <select className="w-full p-2 bg-gray-900 rounded-lg">
-                    <option>{dict?.header?.usdt || "USDT"}</option>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    className="w-full p-2 bg-gray-900 rounded-lg text-white"
+                  >
+                    <option value="USDT">{dict?.header?.usdt || "USDT"}</option>
                   </select>
                 </div>
                 <div>
@@ -270,7 +435,9 @@ export default function ShoppingCart() {
                   </label>
                   <input
                     type="text"
-                    className="w-full p-2 bg-gray-900 rounded-lg"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    className="w-full p-2 bg-gray-900 rounded-lg text-white"
                     required
                   />
                 </div>
@@ -285,13 +452,19 @@ export default function ShoppingCart() {
                     onFocus={handleTelegramFocus}
                     onChange={handleTelegramChange}
                     onKeyDown={handleTelegramKeyDown}
-                    className="w-full p-2 bg-gray-900 rounded-lg"
+                    className="w-full p-2 bg-gray-900 rounded-lg text-white"
                     required
                   />
                 </div>
                 <div>
                   <label className="flex items-center text-[12px]">
-                    <input type="checkbox" className="mr-2" required />
+                    <input
+                      type="checkbox"
+                      checked={agreeToRules}
+                      onChange={(e) => setAgreeToRules(e.target.checked)}
+                      className="mr-2"
+                      required
+                    />
                     {dict?.header?.agree_rules ||
                       "Я согласен с правилами работы сервиса"}
                   </label>
@@ -306,25 +479,27 @@ export default function ShoppingCart() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-red-500 to-red-700 text-white py-4 rounded-xl transition-colors"
+                  disabled={isSubmitting}
+                  className={`w-full py-4 rounded-xl transition-colors font-semibold ${
+                    isSubmitting
+                      ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800"
+                  }`}
                 >
-                  {dict?.shopping_cart?.place_order || "Оформить заказ"}
+                  {isSubmitting
+                    ? dict?.shopping_cart?.placing_order ||
+                      "Оформление заказа..."
+                    : dict?.shopping_cart?.place_order || "Оформить заказ"}
                 </button>
               </form>
             </div>
           )}
+
           <div className="bg-gray-950 border-2 border-gray-800 rounded-xl p-6 mb-6">
-            <UsefulLinks
-            // noNeededMt={true}
-            />
+            <UsefulLinks />
           </div>
         </div>
       </div>
-      {/* <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        selectedItemId={selectedItemId}
-      /> */}
     </>
   );
 }

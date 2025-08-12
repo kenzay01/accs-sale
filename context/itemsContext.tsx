@@ -44,6 +44,8 @@ interface ItemContextType {
   removeCartItem: (id: string) => void;
   loading: boolean;
   error: string | null;
+  userId: string | null;
+  setUserId: (userId: string | null) => void;
 }
 
 const ItemContext = createContext<ItemContextType | undefined>(undefined);
@@ -58,13 +60,15 @@ export function ItemProvider({ children }: { children: ReactNode }) {
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  // Load cartItems from localStorage on mount
+  // Load data from localStorage on mount
   useEffect(() => {
     if (typeof window !== "undefined") {
+      // Load cartItems
       const savedCart = localStorage.getItem("cartItems");
       try {
-        console.log("Loaded from localStorage:", savedCart);
+        // console.log("Loaded cart from localStorage:", savedCart);
         if (savedCart) {
           setCartItems(JSON.parse(savedCart));
         }
@@ -72,16 +76,40 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         console.error("Error parsing cartItems from localStorage:", e);
         setCartItems([]);
       }
+
+      // Load userId
+      const savedUserId = localStorage.getItem("userId");
+      if (savedUserId) {
+        setUserId(savedUserId);
+        console.log("Loaded userId from localStorage:", savedUserId);
+      }
+
+      // Get userId from URL parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const userIdFromUrl = urlParams.get("userId");
+      if (userIdFromUrl) {
+        setUserId(userIdFromUrl);
+        localStorage.setItem("userId", userIdFromUrl);
+        console.log("Set userId from URL:", userIdFromUrl);
+      }
     }
   }, []);
 
   // Save cartItems to localStorage whenever they change
   useEffect(() => {
     if (typeof window !== "undefined") {
-      console.log("Saving to localStorage:", cartItems);
+      // console.log("Saving cart to localStorage:", cartItems);
       localStorage.setItem("cartItems", JSON.stringify(cartItems));
     }
   }, [cartItems]);
+
+  // Save userId to localStorage whenever it changes
+  useEffect(() => {
+    if (typeof window !== "undefined" && userId) {
+      localStorage.setItem("userId", userId);
+      console.log("Saved userId to localStorage:", userId);
+    }
+  }, [userId]);
 
   // Fetch categories, subcategories, items, and pages
   useEffect(() => {
@@ -517,6 +545,8 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         removeCartItem,
         loading,
         error,
+        userId,
+        setUserId,
       }}
     >
       {children}

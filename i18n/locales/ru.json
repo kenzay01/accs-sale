@@ -47,7 +47,7 @@
     "agree_rules": "Я согласен с правилами работы сервиса"
   },
   "home": {
-    "search_placeholder": "Я ищу...",
+    "search_placeholder": "Поиск",
     "filter_title": "Сортировать по",
     "no_categories": "Нет доступных категорий",
     "no_subcategories": "Нет доступных подкатегорий",
@@ -128,7 +128,7 @@
   "cart_btn": {
     "cart": "Корзина"
   },
-  "main": "Головная",
+  "main": "Главная",
   "shopping_cart": {
     "title": "Корзина",
     "continue_shopping": "Продолжить покупки",
@@ -147,7 +147,8 @@
     "order_success_text": "Наш менеджер свяжется с вами в ближайшее время",
     "redirect_text": "Вы будете перенаправлены на главную страницу через несколько секунд",
     "no_user_id": "Для оформления заказа нужно перейти через Telegram бот",
-    "placing_order": "Оформление заказа..."
+    "placing_order": "Оформление заказа...",
+    "contact_manager": "Связаться с менеджером"
   },
   "modal_item": {
     "description": "Описание",

@@ -115,21 +115,19 @@ function HomeContent() {
         >
           <Menu className="w-6 h-6" />
         </button>
-        <button
+        {/* <button
           onClick={() => setIsFilterOpen(true)}
           className="p-2 bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 hover:border-red-500 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
           <Filter className="w-6 h-6" />
-        </button>
+        </button> */}
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              dict?.home.search_placeholder || "What am I looking for..."
-            }
+            placeholder={dict?.home.search_placeholder || "Search"}
             className="w-full pl-11 p-2 bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
           />
         </div>

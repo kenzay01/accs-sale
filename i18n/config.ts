@@ -4,5 +4,5 @@ export type Locale = (typeof locales)[number];
 
 export const localeNames = {
   ru: "Рус",
-  en: "Англ",
+  en: "Eng",
 };

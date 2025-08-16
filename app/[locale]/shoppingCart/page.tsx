@@ -111,7 +111,6 @@ export default function ShoppingCart() {
       }
 
       const orderResult = await orderResponse.json();
-      console.log("Order created successfully:", orderResult);
 
       // Крок 2: Формуємо повідомлення для Telegram
       let telegramMessage = `🛒 *Нове замовлення*\n\n`;
@@ -165,19 +164,8 @@ export default function ShoppingCart() {
         // Не кидаємо помилку, лише логуємо, оскільки замовлення вже створено
       }
 
-      // Крок 4: Очищаємо кошик і показуємо повідомлення про успіх
-      setCartItems([]);
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("cartItems");
-      }
-
       setIsOrderPlaced(true);
       setIsCheckoutOpen(false);
-
-      // Перенаправлення через 3 секунди
-      setTimeout(() => {
-        router.push(`/${currentLanguage}/`);
-      }, 3000);
     } catch (error) {
       console.error("Error creating order:", error);
       alert("Помилка при створенні замовлення. Спробуйте ще раз.");
@@ -213,6 +201,18 @@ export default function ShoppingCart() {
     }
   };
 
+  // Generate Telegram message for manager
+  const telegramMessage = useMemo(() => {
+    let message = "Здравствуйте, хочу заказать:\n";
+    cartItems.forEach((item, index) => {
+      message += `${index + 1}. ${item.name} - ${
+        item.quantity
+      } шт. по ${item.price.toFixed(2)} $\n`;
+    });
+    message += `Общая сумма: ${totalPrice.toFixed(2)} $`;
+    return encodeURIComponent(message);
+  }, [cartItems, totalPrice]);
+
   // Success screen
   if (isOrderPlaced) {
     return (
@@ -232,12 +232,23 @@ export default function ShoppingCart() {
           </h1>
           <p className="text-gray-300 mb-6">
             {dict?.shopping_cart?.order_success_text ||
-              "Наш менеджер свяжется с вами в ближайшее время"}
+              "Для подтверждения заказа, пожалуйста, свяжитесь с нашим менеджером в Telegram."}
           </p>
-          <p className="text-sm text-gray-400">
-            {dict?.shopping_cart?.redirect_text ||
-              "Вы будете перенаправлены на главную страницу через несколько секунд..."}
-          </p>
+          <a
+            href={`https://t.me/DrValuev?text=${telegramMessage}`}
+            onClick={() => {
+              // Крок 4: Очищаємо кошик і показуємо повідомлення про успіх
+              setTimeout(() => {
+                setCartItems([]);
+                router.push(`/${currentLanguage}`);
+              }, 5000); // Перенаправление через 5 секунд
+            }}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block py-4 px-6 rounded-xl bg-gradient-to-r from-red-500 to-red-700 text-white hover:from-red-600 hover:to-red-800 transition-all duration-300 font-semibold text-lg"
+          >
+            {dict?.shopping_cart?.contact_manager || "Связаться с менеджером"}
+          </a>
         </div>
       </div>
     );

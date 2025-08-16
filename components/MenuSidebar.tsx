@@ -103,9 +103,9 @@ export default function MenuSidebar({
 
           <UsefulLinks />
         </div>
-        <div className="p-4 border-t border-red-500">
+        {/* <div className="p-4 border-t border-red-500">
           <LanguageSwitcher currentLocale={currentLocale} />
-        </div>
+        </div> */}
       </div>
     </>
   );

@@ -47,7 +47,7 @@
     "agree_rules": "I agree with the service rules"
   },
   "home": {
-    "search_placeholder": "I'm looking for...",
+    "search_placeholder": "Search",
     "filter_title": "Sort by",
     "no_categories": "No categories available",
     "no_subcategories": "No subcategories available",
@@ -147,7 +147,8 @@
     "order_success_text": "Our manager will contact you shortly",
     "redirect_text": "You will be redirected to the main page in a few seconds",
     "no_user_id": "To place an order, please go through the Telegram bot",
-    "placing_order": "Placing order..."
+    "placing_order": "Placing order...",
+    "contact_manager": "Contact Manager"
   },
   "modal_item": {
     "description": "Description",

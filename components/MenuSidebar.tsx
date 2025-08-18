@@ -35,6 +35,23 @@ export default function MenuSidebar({
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+  useEffect(() => {
+    if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = "fixed";
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = "100%";
+      document.body.style.overflow = "hidden";
+
+      return () => {
+        document.body.style.position = "";
+        document.body.style.top = "";
+        document.body.style.width = "";
+        document.body.style.overflow = "";
+        window.scrollTo(0, scrollY);
+      };
+    }
+  }, [isOpen]);
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -52,7 +69,7 @@ export default function MenuSidebar({
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 transition-all duration-300 z-40 ${
+        className={`fixed inset-0 transition-all duration-300 z-[70] ${
           isAnimating ? "bg-black/50" : "bg-black/0"
         }`}
         onClick={handleBackdropClick}
@@ -60,8 +77,8 @@ export default function MenuSidebar({
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 right-0 flex flex-col justify-between h-full bg-gray-900 w-64 shadow-lg z-50 transform transition-transform duration-300 ease-in-out ${
-          isAnimating ? "translate-x-0" : "translate-x-full"
+        className={`fixed top-0 left-0 flex flex-col justify-between h-full bg-gray-950 w-64 shadow-lg z-[70] transform transition-transform duration-300 ease-in-out ${
+          isAnimating ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="p-4">
@@ -74,7 +91,7 @@ export default function MenuSidebar({
                 height={100}
                 className="h-10 w-10 rounded-full"
               />
-              <h1 className="text-sm">Normalno Auto</h1>
+              <h1 className="text-sm">DIABET</h1>
             </div>
             <button
               onClick={onClose}
@@ -84,9 +101,9 @@ export default function MenuSidebar({
             </button>
           </div>
 
-          <UsefulLinks handleMenuItemClick={handleMenuItemClick} />
+          <UsefulLinks />
         </div>
-        <div className="p-4 border-t border-gray-700">
+        <div className="p-4 border-t border-red-500">
           <LanguageSwitcher currentLocale={currentLocale} />
         </div>
       </div>

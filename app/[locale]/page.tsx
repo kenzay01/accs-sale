@@ -3,7 +3,6 @@
 import Header from "@/components/Header";
 import FilterModal from "@/components/FilterModal";
 import MenuSidebar from "@/components/MenuSidebar";
-import Modal from "@/components/Modal";
 import CategorySelector from "@/components/CategorySelector";
 import MainItem from "@/components/MainItem";
 import { useState, useEffect, useMemo } from "react";
@@ -14,8 +13,7 @@ import { Filter, Menu, Search } from "lucide-react";
 import Image from "next/image";
 import bgImage from "@/public/bgImage.jpg";
 import CartButton from "@/components/CartButton";
-import type { Category, Subcategory } from "@/types/categories";
-import { ItemProvider, useItemContext } from "@/context/itemsContext";
+import { useItemContext } from "@/context/itemsContext";
 import { v4 as uuidv4 } from "uuid";
 
 function HomeContent() {
@@ -41,54 +39,40 @@ function HomeContent() {
     { id: "ubivanie", label: "By price descending" },
   ];
 
-  // Фільтрація і сортування items
   const filteredAndSortedItems = useMemo(() => {
     let filteredItems = [...items];
-
-    // Фільтрація за пошуковим запитом
     if (searchQuery.trim()) {
       filteredItems = filteredItems.filter((item) =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
-    // Фільтрація за категорією
     if (selectedCategory) {
       filteredItems = filteredItems.filter(
         (item) => item.categoryId === selectedCategory
       );
     }
-
-    // Фільтрація за підкатегорією
     if (selectedSubcategory) {
       filteredItems = filteredItems.filter(
         (item) => item.subcategoryId === selectedSubcategory
       );
     }
-
-    // Сортування за обраним фільтром
     switch (selectedFilter) {
       case "novinki":
-        // Сортування за датою додавання (найновіші спочатку)
         filteredItems.sort(
           (a, b) =>
             new Date(b.timeAdded).getTime() - new Date(a.timeAdded).getTime()
         );
         break;
       case "vozvrastanie":
-        // Сортування за ціною (від меншої до більшої)
         filteredItems.sort((a, b) => a.price - b.price);
         break;
       case "ubivanie":
-        // Сортування за ціною (від більшої до меншої)
         filteredItems.sort((a, b) => b.price - a.price);
         break;
       case "rates":
       default:
-        // За замовчуванням залишаємо оригінальний порядок (або можна додати логіку для рейтингів)
         break;
     }
-
     return filteredItems;
   }, [
     items,
@@ -101,7 +85,6 @@ function HomeContent() {
   const handleFilterSelect = (filterId: string) => {
     setSelectedFilter(filterId);
     setIsFilterOpen(false);
-    console.log("Selected filter:", filterId);
   };
 
   const handleMenuItemClick = (itemId: string) => {
@@ -116,55 +99,40 @@ function HomeContent() {
   ) => {
     setSelectedCategory(categoryId);
     setSelectedSubcategory(subcategoryId);
-    // if (subcategoryId) {
-    //   console.log(
-    //     "Applied filter - Category:",
-    //     categoryId,
-    //     "Subcategory:",
-    //     subcategoryId
-    //   );
-    // }
   };
 
   return (
     <div className="relative min-h-screen text-white">
       <CartButton />
       <div className="absolute inset-0 -z-1">
-        <Image
-          src={bgImage}
-          alt="Background"
-          layout="fill"
-          objectFit="cover"
-          className=""
-        />
+        <Image src={bgImage} alt="Background" fill className="object-cover" />
       </div>
       <Header />
       <div className="p-4 pt-0 flex gap-2 items-center">
+        <button
+          onClick={() => setIsMenuOpen(true)}
+          className="p-2 bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 hover:border-red-500 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          <Menu className="w-6 h-6" />
+        </button>
+        {/* <button
+          onClick={() => setIsFilterOpen(true)}
+          className="p-2 bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 hover:border-red-500 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
+        >
+          <Filter className="w-6 h-6" />
+        </button> */}
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              dict?.home.search_placeholder || "What am I looking for..."
-            }
-            className="w-full pl-11 p-2 bg-gray-900 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            placeholder={dict?.home.search_placeholder || "Search"}
+            className="w-full pl-11 p-2 bg-gray-950 hover:bg-gray-900 border-2 border-gray-950 rounded-lg text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
           />
         </div>
-        <button
-          onClick={() => setIsFilterOpen(true)}
-          className="p-2 bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          <Filter className="w-6 h-6" />
-        </button>
-        <button
-          onClick={() => setIsMenuOpen(true)}
-          className="p-2 bg-gray-900 rounded-lg hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-500"
-        >
-          <Menu className="w-6 h-6" />
-        </button>
       </div>
+
       <CategorySelector
         onSelectionChange={handleSelectionChange}
         categories={categories}
@@ -191,61 +159,36 @@ function HomeContent() {
         onClose={() => setIsMenuOpen(false)}
         onMenuItemClick={handleMenuItemClick}
       />
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        selectedItemId={selectedItemId}
-      />
       <section className="p-4">
-        <div className="flex gap-4 flex-wrap overflow-x-auto pb-2 items-center">
-          {filteredAndSortedItems.map((item) => (
-            <MainItem
-              key={item.id}
-              id={item.id}
-              name={item.name}
-              price={item.price}
-              img={item.img}
-              categoryId={item.categoryId}
-              subcategoryId={item.subcategoryId}
-              timeAdded={item.timeAdded}
-            />
-          ))}
-        </div>
+        {filteredAndSortedItems.length > 0 ? (
+          <div className="flex gap-4 flex-wrap overflow-x-auto pb-2 items-center justify-center">
+            {filteredAndSortedItems.map((item) => (
+              <MainItem
+                key={item.id}
+                id={item.id}
+                name={item.name}
+                description_ru={item.description_ru}
+                description_en={item.description_en}
+                price={item.price}
+                img={item.img}
+                categoryId={item.categoryId}
+                subcategoryId={item.subcategoryId}
+                timeAdded={item.timeAdded}
+                handleMenuItemClick={handleMenuItemClick}
+              />
+            ))}
+          </div>
+        ) : (
+          <p className="text-center text-gray-300">
+            {dict?.home.no_items || "No items available"}
+          </p>
+        )}
       </section>
-      {/* <div>
-        <p className="text-gray-300">Test: {searchQuery}</p>
-        <p className="text-gray-300">
-          Category:{" "}
-          {selectedCategory
-            ? currentLanguage === "ru"
-              ? categories.find((c) => c.id === selectedCategory)?.label_ru
-              : categories.find((c) => c.id === selectedCategory)?.label_en
-            : "None"}
-          , Subcategory:{" "}
-          {selectedSubcategory
-            ? currentLanguage === "ru"
-              ? subcategories[selectedCategory || ""].find(
-                  (s) => s.id === selectedSubcategory
-                )?.label_ru
-              : subcategories[selectedCategory || ""].find(
-                  (s) => s.id === selectedSubcategory
-                )?.label_en
-            : "None"}
-        </p>
-        <p>
-          cartItems: {cartItems?.length}: {JSON.stringify(cartItems)}
-        </p>
-      </div> */}
       {cartItems.length > 0 && <div className="h-12" />}
     </div>
   );
 }
 
 export default function Home() {
-  return (
-    <ItemProvider>
-      {/* <ManageSection /> */}
-      <HomeContent />
-    </ItemProvider>
-  );
+  return <HomeContent />;
 }

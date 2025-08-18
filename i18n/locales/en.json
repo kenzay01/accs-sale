@@ -39,11 +39,19 @@
         "title": "Bookmaker Scam",
         "content": "We are not responsible for your funds if the bookmaker does not want to give them back, provided that our team has fulfilled all the requirements of this bookmaker."
       }
-    ]
+    ],
+    "payment": "Payment",
+    "usdt": "USDT",
+    "your_name": "Your name*",
+    "telegram_username": "Your Telegram username*",
+    "agree_rules": "I agree with the service rules"
   },
   "home": {
     "search_placeholder": "I'm looking for...",
     "filter_title": "Sort by",
+    "no_categories": "No categories available",
+    "no_subcategories": "No subcategories available",
+    "no_items": "No items available",
     "filter_options": [
       { "id": "rates", "label": "By rating" },
       { "id": "novinki", "label": "New items" },
@@ -106,10 +114,38 @@
       "content": "Belarus\nOne bookmaker for $100\nTwo different bookmakers for $90\nThree or more different bookmakers - $80\nFull bookmaker list $599\n\nGeorgia\nOne bookmaker for $170\nTwo different bookmakers for $160\nThree or more different bookmakers - $155\nFull bookmaker list $999\nMonthly rental $75"
     }
   },
+  "usefulLinks": {
+    "title": "Useful Links",
+    "aboutUs": "About Us",
+    "faq": "FAQ",
+    "promotions": "Promotions",
+    "termsConditions": "Terms & Conditions",
+    "partnerWithUs": "Partner with Us"
+  },
   "main_item": {
     "in_cart": "In cart"
   },
   "cart_btn": {
     "cart": "Cart"
+  },
+  "main": "Main",
+  "shopping_cart": {
+    "title": "Shopping Cart",
+    "continue_shopping": "Continue Shopping",
+    "empty": "Cart is empty",
+    "empty_subtitle": "Add items to place an order",
+    "items_in_cart": "In cart",
+    "item": "item",
+    "items": "items",
+    "items_many": "items",
+    "total": "Total",
+    "checkout": "Checkout",
+    "back_to_cart": "Back to Cart",
+    "place_order": "Place Order"
+  },
+  "modal_item": {
+    "description": "Description",
+    "date_added": "Date Added",
+    "total": "Total"
   }
 }

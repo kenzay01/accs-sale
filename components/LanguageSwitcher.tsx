@@ -52,8 +52,8 @@ export default function LanguageSwitcher({
             href={getLocalizedPath(locale)}
             className={`px-2 py-1 text-sm rounded transition-colors ${
               currentLocale === locale
-                ? "bg-gray-700 text-white"
-                : "text-gray-300 hover:text-gray-700 hover:bg-gray-200"
+                ? "bg-gray-900 text-red-500"
+                : "text-gray-300 hover:text-gray-900 hover:bg-gray-400"
             }`}
           >
             {localeNames[locale]}

@@ -14,10 +14,10 @@ export default function CartButton() {
     0
   );
   return cartItems.length > 0 ? (
-    <section className="fixed bottom-0 w-full p-2 bg-gray-900">
-      <button className="bg-purple-700 text-white w-full rounded h-8">
+    <section className="fixed bottom-0 w-full p-2 bg-gray-950 z-[60]">
+      <button className="bg-gradient-to-r from-red-500 to-red-700 text-white w-full rounded h-8">
         <Link
-          href="/shoppingCart"
+          href={`/${currentLocale}/shoppingCart`}
           className="w-auto h-auto flex items-center justify-center"
         >
           {dict?.cart_btn.cart || "Cart"} ({cartQuantity})

@@ -42,6 +42,8 @@ interface ItemContextType {
   setCartItems: (items: CartItem[]) => void;
   addCartItem: (item: CartItem) => void;
   removeCartItem: (id: string) => void;
+  userId: string | null;
+  setUserId: (id: string | null) => void;
   loading: boolean;
   error: string | null;
 }
@@ -58,6 +60,7 @@ export function ItemProvider({ children }: { children: ReactNode }) {
   const [pages, setPages] = useState<Page[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Load cartItems from localStorage on mount
   useEffect(() => {
@@ -515,6 +518,8 @@ export function ItemProvider({ children }: { children: ReactNode }) {
         setCartItems,
         addCartItem,
         removeCartItem,
+        userId,
+        setUserId,
         loading,
         error,
       }}

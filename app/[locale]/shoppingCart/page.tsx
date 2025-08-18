@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useItemContext } from "@/context/itemsContext";
 import { useCurrentLanguage } from "@/hooks/getCurrentLanguage";
 import { useDictionary } from "@/hooks/getDictionary";
@@ -29,8 +29,19 @@ export default function ShoppingCart() {
   const [agreeToRules, setAgreeToRules] = useState(false);
 
   const { dict } = useDictionary(currentLanguage as Locale);
-  const { cartItems, addCartItem, removeCartItem, setCartItems, userId } =
+  const { cartItems, addCartItem, removeCartItem, setCartItems, userId, setUserId } =
     useItemContext();
+
+  // Get userId from URL parameters
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlUserId = urlParams.get('userId');
+      if (urlUserId && !userId) {
+        setUserId(urlUserId);
+      }
+    }
+  }, [userId, setUserId]);
 
   const totalPrice = useMemo(() => {
     return cartItems.reduce((total, cartItem) => {

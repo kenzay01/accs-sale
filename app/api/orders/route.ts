@@ -11,13 +11,28 @@ async function getDb(): Promise<DatabaseManager> {
   return dbInstance;
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const db = await getDb();
     const rows = await db.getAllOrders();
 
+    // Define interface for database row
+    interface OrderRow {
+      id: number;
+      user_id: number;
+      product_name: string;
+      price: number;
+      status: string;
+      created_at: string;
+      telegram_id: number;
+      username?: string;
+      first_name?: string;
+      last_name?: string;
+      language: string;
+    }
+
     // Normalize to include nested user object for the admin UI
-    const orders = rows.map((row: any) => ({
+    const orders = rows.map((row: OrderRow) => ({
       id: row.id,
       user_id: row.user_id,
       product_name: row.product_name,

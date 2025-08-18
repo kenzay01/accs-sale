@@ -141,7 +141,13 @@
     "total": "Total",
     "checkout": "Checkout",
     "back_to_cart": "Back to Cart",
-    "place_order": "Place Order"
+    "place_order": "Place Order",
+    "agree_rules_error": "Please agree to the rules",
+    "order_success": "Order successfully placed!",
+    "order_success_text": "Thank you for your order! We will contact you soon.",
+    "contact_manager": "Contact Manager",
+    "no_user_id": "To place an order, you need to go through the Telegram bot",
+    "placing_order": "Placing order..."
   },
   "modal_item": {
     "description": "Description",
